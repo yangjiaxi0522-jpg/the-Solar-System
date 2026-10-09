@@ -1,0 +1,2205 @@
+/* ==========================================================================
+   探索太阳系 · Explore the Solar System — stylesheet v2 (refined deep-space)
+   TDLL6329 prototype. Section headers name the theory each block serves.
+     L1 = Lesson 1  multimodality (five modes, affordances, complementarity)
+     L2 = Lesson 2  MDA (Halliday metafunctions, Kress & van Leeuwen)
+     L3 = Lesson 3  Mayer CTML (reduce / manage / foster processing)
+
+   v2 design language
+   ----------------
+   · One dark cosmic canvas; all content sits on glass surfaces with hairline
+     borders. Depth comes from layered shadows, not from thick coloured frames.
+   · Two accents only: gold (primary actions, Ideal band) and cyan
+     (listen/secondary, Real band). Status colours (mint / amber) are reserved
+     for feedback, so colour always means something.            [L3-Coherence]
+   · Type: Inter-like stack, tight display tracking, uppercase micro-labels.
+   · Radii: 12 buttons · 16–22 surfaces · 999 chips.
+   · No decorative animation anywhere; motion that exists explains "revolve".
+   ========================================================================== */
+
+/* ---------- 1. Design tokens ---------- */
+:root {
+  /* canvas */
+  --bg-0: #060a18;
+  --bg-1: #0a1129;
+  --bg-2: #101a3f;
+  --bg-3: #16224f;
+
+  /* glass surfaces */
+  --glass-1: rgba(255, 255, 255, .045);
+  --glass-2: rgba(255, 255, 255, .07);
+  --glass-3: rgba(255, 255, 255, .11);
+  --line: rgba(255, 255, 255, .10);
+  --line-2: rgba(255, 255, 255, .18);
+  --line-3: rgba(255, 255, 255, .28);
+
+  /* text */
+  --text: #ecf1ff;
+  --text-2: #aab6da;
+  --text-3: #7d8ab3;
+  --ink: #0a1024;
+
+  /* accents */
+  --gold: #ffc24b;
+  --gold-2: #ffdf9d;
+  --gold-deep: #d98f0d;
+  --cyan: #7fd8ff;
+  --cyan-2: #cdeeff;
+  --cyan-deep: #2d86b8;
+  --mint: #6fe3b0;
+  --mint-deep: #17936a;
+  --amber: #ffb27a;
+  --violet: #9fb0ff;
+
+  /* planet palette — brighter core, deeper edge (used by CSS + script.js) */
+  --sun: #ffc24b;      --sun-2: #ffe9a8;      --sun-3: #e8890c;
+  --mercury: #a8afbd;  --mercury-2: #d7dbe6;  --mercury-3: #5d6472;
+  --venus: #efc178;    --venus-2: #fff0ce;    --venus-3: #b8853a;
+  --earth: #58b6ee;    --earth-2: #bfe9ff;    --earth-3: #1b5fa8;
+  --mars: #e0734c;     --mars-2: #ffc9ae;     --mars-3: #9e3d1e;
+  --jupiter: #dca972;  --jupiter-2: #ffe7c6;  --jupiter-3: #a06a34;
+  --saturn: #e7d4a2;   --saturn-2: #fff6de;   --saturn-3: #bfa067;
+  --uranus: #93dbe2;   --uranus-2: #e3fbfd;   --uranus-3: #4e9aa6;
+  --neptune: #7089e6;  --neptune-2: #cbd9ff;  --neptune-3: #2f4ba6;
+
+  /* radii + motion */
+  --r-btn: 12px;
+  --r-card: 20px;
+  --r-s: 14px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --t: .18s var(--ease);
+
+  --shadow-card:
+    inset 0 1px 0 rgba(255, 255, 255, .07),
+    0 1px 2px rgba(0, 0, 0, .4),
+    0 24px 48px -28px rgba(0, 0, 0, .95);
+  --shadow-lift:
+    inset 0 1px 0 rgba(255, 255, 255, .09),
+    0 2px 4px rgba(0, 0, 0, .35),
+    0 32px 60px -30px rgba(0, 0, 0, 1);
+  --max: 1200px;
+}
+
+/* ---------- 2. Base ---------- */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg-0);
+  font-family: "Inter", "PingFang SC", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01" 1, "cv05" 1;
+}
+
+/* Cosmic canvas: three soft light sources + a slow, still starfield.
+   [L3-Coherence] the stars are the only "decoration": one static layer at ~4%
+   contrast, and they establish the content context (we are looking at space). */
+body::before {
+  content: "";
+  position: fixed; inset: 0; z-index: -2;
+  background:
+    radial-gradient(1200px 720px at 10% -12%, rgba(94, 124, 255, .22), transparent 62%),
+    radial-gradient(900px 640px at 104% -4%, rgba(255, 194, 75, .12), transparent 58%),
+    radial-gradient(1000px 760px at 50% 118%, rgba(127, 216, 255, .10), transparent 62%),
+    linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 42%, #070c1d 100%);
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: .5;
+  background-image:
+    radial-gradient(1.4px 1.4px at 18% 22%, rgba(255, 255, 255, .85), transparent 60%),
+    radial-gradient(1.2px 1.2px at 72% 12%, rgba(255, 255, 255, .6), transparent 60%),
+    radial-gradient(1px 1px at 40% 62%, rgba(255, 255, 255, .5), transparent 60%),
+    radial-gradient(1.6px 1.6px at 88% 48%, rgba(205, 225, 255, .55), transparent 60%),
+    radial-gradient(1px 1px at 8% 76%, rgba(255, 255, 255, .45), transparent 60%),
+    radial-gradient(1.2px 1.2px at 62% 88%, rgba(255, 255, 255, .4), transparent 60%);
+  background-size: 900px 900px, 700px 700px, 820px 820px, 640px 640px, 760px 760px, 880px 880px;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  line-height: 1.18;
+  letter-spacing: -.02em;
+  font-weight: 650;
+  color: var(--text);
+}
+p { margin: 0; }
+ul, ol { margin: 0; padding: 0; }
+button { font: inherit; color: inherit; }
+
+/* Language switching: one class on <body>.         [L3-Coherence] one language on screen */
+body.lang-zh .lang-en,
+body.lang-en .lang-zh { display: none !important; }
+
+/* Theory tags: hidden by default, shown for teacher/report use. */
+.theory-badge { display: none; }
+body.show-theory .theory-badge {
+  display: inline-flex; align-items: center;
+  background: rgba(159, 176, 255, .10);
+  border: 1px solid rgba(159, 176, 255, .32);
+  color: #c8d2ff;
+  font-size: 11px; letter-spacing: .04em;
+  padding: .18em .55em; border-radius: 6px;
+}
+body.show-theory .badge-row { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+/* Motion master switch.                            [L3-Boundary] learner control */
+body.motion-paused *, body.motion-paused *::before, body.motion-paused *::after {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}
+
+::selection { background: rgba(255, 194, 75, .3); color: #fff; }
+
+*:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* ---------- 3. Helpers ---------- */
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 99;
+  background: var(--gold); color: var(--ink);
+  padding: .6rem 1rem; border-radius: 0 0 10px 0; font-weight: 650;
+}
+.skip-link:focus { left: 0; }
+
+.sr-live {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* Inline SVG icon slot (replaces the old emoji). */
+.ico {
+  display: inline-flex; flex: none;
+  width: 1.06em; height: 1.06em;
+  align-items: center; justify-content: center;
+}
+.ico svg { width: 100%; height: 100%; display: block; }
+.ico-off { opacity: .4; }
+
+/* Keyword highlight — the single "signalling" device. [L3-Signaling] */
+.hk {
+  font-weight: 650;
+  color: #fff;
+  background: linear-gradient(180deg, transparent 62%, rgba(255, 194, 75, .42) 62%);
+  padding: 0 2px;
+}
+
+/* Micro label: uppercase, tracked, tertiary. */
+.micro {
+  font-size: 11px; font-weight: 600; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--text-3);
+}
+
+/* ---------- 4. Header ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; flex-direction: column; gap: .55rem;
+  padding: .7rem clamp(1rem, 4vw, 2.4rem) .6rem;
+  background: rgba(6, 10, 24, .74);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-bottom: 1px solid var(--line);
+}
+/* 第一行：品牌 + 设置；第二行：常驻主导航                [L3-Boundary] */
+.header-top {
+  display: flex; flex-wrap: wrap; gap: .8rem;
+  align-items: center; justify-content: space-between;
+}
+
+.brand { display: flex; align-items: center; gap: .8rem; }
+.brand-text { display: flex; flex-direction: column; }
+.brand-title {
+  font-size: clamp(1.05rem, 1.9vw, 1.28rem);
+  letter-spacing: -.01em; font-weight: 650;
+}
+.brand-sub { font-size: .78rem; color: var(--text-3); letter-spacing: .01em; }
+
+.brand-mark {
+  position: relative; width: 38px; height: 38px; flex: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #16224f, #070c1d 70%);
+  border: 1px solid var(--line-2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 6px 16px -8px rgba(0, 0, 0, .9);
+}
+.brand-sun {
+  position: absolute; left: 50%; top: 50%; width: 11px; height: 11px;
+  margin: -5.5px 0 0 -5.5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, var(--sun-2), var(--sun) 62%, var(--sun-3));
+  box-shadow: 0 0 12px 2px rgba(255, 194, 75, .55);
+  animation: pulse 3.4s var(--ease) infinite;
+}
+.brand-orbit {
+  position: absolute; inset: 5px; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .16);
+}
+.brand-orbit::after {
+  content: ""; position: absolute; left: 50%; top: -4px; width: 7px; height: 7px;
+  margin-left: -3.5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, var(--cyan-2), var(--cyan) 70%);
+  box-shadow: 0 0 8px rgba(127, 216, 255, .7);
+}
+
+.header-controls { display: flex; flex-wrap: wrap; gap: .3rem; }
+
+.ctl {
+  display: inline-flex; align-items: center; gap: .38rem;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  padding: .4rem .68rem;
+  border-radius: 10px;
+  font-size: .8rem; font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t);
+}
+.ctl:hover { background: var(--glass-2); border-color: var(--line-2); color: var(--text); }
+.ctl[aria-pressed="true"] {
+  background: var(--glass-3); border-color: var(--line-3); color: #fff; font-weight: 600;
+}
+.ctl-strong {
+  background: var(--glass-2);
+  border-color: var(--line-3);
+  color: #fff; font-weight: 600;
+}
+.ctl-strong:hover { background: var(--glass-3); }
+
+/* ---------- 5. Caption bar: 已删除 ----------
+   [教训] 这里原来有 .caption-bar { display: flex } 却没有配套的
+   `.caption-bar[hidden] { display: none }`。类选择器的 display 会盖过
+   [hidden] 的 UA 规则，于是那条本该默认隐藏的字幕栏在每一页顶部常驻。
+   本文件里所有其它用 hidden 控制显隐的元素（.view / .module / .jump-menu /
+   .to-top / .tab-panel / .planet-pop / .module-dock）都写了对应的 [hidden] 规则，
+   只有这一处漏了。以后新增可隐藏元素时，务必成对写。 */
+
+/* ---------- 6. Navigation: the learning path ----------
+   [L1-Nonlinear] 5 站连成一条路（数字徽章 + 箭头），但每一站都能直接点。
+   [L3-Progress] 每站自带状态：已完成（薄荷 ✓）/ 正在学习（金色）/ 未开始（灰）。
+   状态词由 script.js 写进 .step-state；这里只负责样子。 */
+.main-nav {
+  display: flex; justify-content: center;
+  width: fit-content; max-width: 100%;
+  margin: 0 auto; padding: .14rem .3rem;
+  background: var(--glass-1);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+}
+.journey {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: nowrap; list-style: none;
+  width: auto; max-width: 980px; margin: 0; padding: 0;
+}
+.journey-step { display: flex; align-items: center; flex: 0 0 auto; }
+/* 两站之间：一条线 + 箭头，颜色说明“走到哪儿了” */
+.step-link {
+  position: relative; align-self: center;
+  height: 2px; margin: 0 .3rem; border-radius: 2px;
+  background: rgba(255, 255, 255, .13);
+}
+.journey-step:not(:last-child) .step-link {
+  flex: 0 1 clamp(14px, 2.4vw, 34px); max-width: 120px; min-width: 14px;
+}
+.step-link::after {
+  content: ""; position: absolute; right: 0; top: 50%;
+  width: 5px; height: 5px;
+  transform: translateY(-50%) rotate(45deg);
+  border-top: 2px solid rgba(255, 255, 255, .22);
+  border-right: 2px solid rgba(255, 255, 255, .22);
+}
+.journey-step[data-state="done"] .step-link {
+  background: linear-gradient(90deg, var(--mint), rgba(111, 227, 176, .3));
+}
+.journey-step[data-state="done"] .step-link::after {
+  border-color: var(--mint);
+}
+.journey-step[data-state="partial"] .step-link,
+.journey-step[data-state="current"] .step-link {
+  background: linear-gradient(90deg, rgba(255, 194, 75, .85), rgba(255, 194, 75, .12));
+}
+.journey-step[data-state="partial"] .step-link::after,
+.journey-step[data-state="current"] .step-link::after {
+  border-color: rgba(255, 194, 75, .75);
+}
+/* 窄屏：导航条收进“跳到”菜单，header 依然常驻 */
+.ctl-jump { display: none; }
+.jump-menu {
+  position: absolute; top: calc(100% + .4rem); right: clamp(1rem, 4vw, 2.4rem);
+  width: min(420px, calc(100vw - 2rem));
+  max-height: calc(100vh - 7rem); overflow-y: auto;
+  padding: .9rem 1rem 1rem;
+  background: linear-gradient(180deg, rgba(16, 26, 63, .98), rgba(8, 14, 34, .99));
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(18px);
+  z-index: 60;
+}
+.jump-menu[hidden] { display: none; }
+.jump-group { margin: .2rem 0 .45rem; }
+.jump-menu .jump-group:not(:first-child) { margin-top: .9rem; }
+.jump-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .35rem; }
+.jump-item {
+  display: inline-flex; align-items: center; gap: .45rem;
+  background: var(--glass-1); border: 1px solid var(--line);
+  border-radius: 10px; padding: .5rem .7rem;
+  color: var(--text); font-size: .88rem; font-weight: 550;
+  cursor: pointer; text-align: left;
+  transition: background var(--t), border-color var(--t), transform var(--t);
+}
+.jump-item:hover { background: var(--glass-3); border-color: var(--line-3); transform: translateY(-1px); }
+.jump-item.is-current { border-color: var(--gold); color: #fff; }
+/* 窄屏的“学习路径”：一行一站，数字 + 名字 + 状态（和横排那条说的是同一件事） */
+.jump-steps { display: grid; gap: .3rem; list-style: none; margin: 0; padding: 0; }
+.jump-steps .jump-item { display: flex; width: 100%; }
+.jump-item .jump-ico { color: var(--text-3); flex: none; }
+.jump-item .step-state { margin-left: auto; padding-left: .6rem; }
+.jump-item[data-state="done"] { border-color: rgba(111, 227, 176, .42); }
+.jump-item[data-state="done"] .step-state { color: var(--mint); }
+.jump-item[data-state="partial"] { border-color: rgba(255, 194, 75, .4); }
+.jump-item[data-state="partial"] .step-state,
+.jump-item[data-state="current"] .step-state { color: var(--gold-2); }
+.step-badge-sm { width: 22px; height: 22px; font-size: .68rem; }
+.step-badge-sm .step-tick,
+.step-badge-sm .step-tick svg { width: 13px; height: 13px; }
+
+/* 回到顶部：滚过一屏才出现                              [L3-Boundary] */
+.to-top {
+  position: fixed; right: clamp(.9rem, 3vw, 1.6rem); bottom: clamp(.9rem, 3vw, 1.6rem);
+  z-index: 45;
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .55rem .85rem;
+  background: linear-gradient(180deg, rgba(16, 26, 63, .96), rgba(8, 14, 34, .98));
+  border: 1px solid var(--line-3);
+  border-radius: 999px;
+  color: var(--text); font-size: .82rem; font-weight: 600;
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  transition: transform var(--t), background var(--t);
+}
+.to-top:hover { transform: translateY(-2px); background: var(--glass-3); }
+.to-top[hidden] { display: none; }
+.step-footer .btn-home { margin-right: auto; }
+
+/* 一站 = 数字徽章 + 环节名 + 状态词 */
+.nav-btn {
+  display: inline-flex; align-items: center; gap: .45rem;
+  background: transparent; border: 1px solid transparent;
+  padding: .24rem .5rem; border-radius: 14px;
+  color: var(--text-2); font-size: .87rem;
+  cursor: pointer; text-align: left;
+  transition: background var(--t), color var(--t), border-color var(--t);
+}
+.nav-btn:hover { color: var(--text); background: var(--glass-2); }
+/* is-active = “你在这里”（和状态词无关：完成过的环节也可以是你现在所在的环节） */
+.nav-btn.is-active {
+  background: var(--glass-2); border-color: var(--line-2); color: #fff;
+}
+.step-badge {
+  position: relative; flex: none;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1.5px solid var(--line-2);
+  background: var(--glass-1);
+  color: var(--text-2);
+  font-size: .74rem; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--t), color var(--t), border-color var(--t), box-shadow var(--t);
+}
+.step-tick { display: none; width: 15px; height: 15px; }
+.step-tick svg { width: 15px; height: 15px; }
+.step-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.step-label { font-size: .84rem; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+.step-state {
+  font-size: 10px; font-weight: 600; line-height: 1.2; letter-spacing: .02em;
+  white-space: nowrap; color: var(--text-3);
+}
+/* 完成：薄荷实心 ✓ */
+[data-state="done"] .step-badge {
+  background: var(--mint); border-color: transparent;
+  box-shadow: 0 0 0 1px rgba(111, 227, 176, .45), 0 0 10px rgba(111, 227, 176, .25);
+}
+[data-state="done"] .step-num { display: none; }
+[data-state="done"] .step-tick { display: block; color: var(--ink); }
+[data-state="done"] .step-state { color: var(--mint); }
+/* 正在学习：金色空心圈（“你在这里”的那一站） */
+[data-state="current"] .step-badge {
+  border-color: var(--gold); color: var(--gold-2);
+  background: rgba(255, 194, 75, .14);
+  box-shadow: 0 0 0 3px rgba(255, 194, 75, .12), 0 0 12px rgba(255, 194, 75, .28);
+}
+[data-state="current"] .step-state { color: var(--gold-2); }
+/* 做了一半：金色描边 + 进度（继续 2/5） */
+[data-state="partial"] .step-badge {
+  border-color: rgba(255, 194, 75, .5); color: var(--gold-2);
+  background: rgba(255, 194, 75, .09);
+}
+[data-state="partial"] .step-state,
+[data-state="todo"] .step-state { color: var(--text-3); }
+.nav-btn.is-active .step-label { color: #fff; }
+/* 刚刚完成的那一站：徽章跳两下，把“完成”这个瞬间说清楚 */
+@keyframes stepPop {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.16); }
+}
+.nav-btn.is-just-done .step-badge { animation: stepPop .8s var(--ease) 2; }
+
+/* ---------- 7. Views ---------- */
+.view {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: clamp(1.4rem, 3.6vw, 2.6rem) clamp(.9rem, 3vw, 1.2rem) 4rem;
+}
+.view[hidden] { display: none; }
+
+.view-head { margin-bottom: 1.5rem; }
+.view-kicker {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-size: 11px; font-weight: 600; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--gold);
+}
+.view-kicker::before {
+  content: ""; width: 22px; height: 1px; background: currentColor; opacity: .7;
+}
+.view-title {
+  font-size: clamp(1.7rem, 3.4vw, 2.45rem);
+  margin: .6rem 0 .5rem;
+  background: linear-gradient(180deg, #ffffff 20%, #c3d0f5 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.view-lede { color: var(--text-2); max-width: 62ch; font-size: 1.02rem; }
+.badge-row { margin-top: .8rem; }
+
+/* ---------- 8. Hero ---------- */
+.hero {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr);
+  gap: clamp(1.6rem, 4vw, 3.4rem); align-items: center;
+}
+/* 竖排：动画在上，文字说明在下。若用横向 flex，说明文字会与动画挤在同一行，
+   把动画压窄（实测只剩 129px）——所以这里必须 column。 */
+.hero-art { display: flex; flex-direction: column; align-items: center; position: relative; }
+.hero-art::before {
+  /* 只在上下留外溢的柔光：横向也外溢 6% 会把整页撑出横向滚动条
+     （1250px 以下 .view 几乎占满宽度时最明显）—— 那条柔光在 70% 处已经透明，
+     收掉横向外溢看不出差别，但吸顶 header 不会再被挤出视口。 */
+  content: ""; position: absolute; inset: -8% 0;
+  background: radial-gradient(closest-side, rgba(255, 194, 75, .10), transparent 70%);
+  pointer-events: none;
+}
+.hero-title {
+  font-size: clamp(2rem, 4.4vw, 3.05rem);
+  letter-spacing: -.035em; line-height: 1.1;
+  margin-bottom: 1rem;
+  background: linear-gradient(180deg, #ffffff 30%, #b9c8f2 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin: 1.2rem 0 1.4rem; }
+
+/* Buttons: 12px radius, hairline borders, no thick drop "3D" rims. */
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  border-radius: var(--r-btn);
+  padding: .68rem 1.05rem;
+  border: 1px solid transparent;
+  font-size: .95rem; font-weight: 600; letter-spacing: -.005em;
+  cursor: pointer; white-space: nowrap;
+  transition: transform var(--t), box-shadow var(--t), background var(--t), border-color var(--t);
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-primary {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  color: #1b1204;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .6),
+    0 10px 26px -12px rgba(255, 178, 46, .75);
+}
+.btn-primary:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 14px 30px -12px rgba(255, 178, 46, .9); }
+.btn-ghost {
+  background: var(--glass-1);
+  border-color: var(--line-2);
+  color: var(--text);
+  backdrop-filter: blur(10px);
+}
+.btn-ghost:hover { background: var(--glass-3); border-color: var(--line-3); }
+.btn-speak {
+  background: rgba(127, 216, 255, .10);
+  border-color: rgba(127, 216, 255, .30);
+  color: var(--cyan-2);
+  font-size: .88rem; padding: .5rem .85rem;
+}
+.btn-speak:hover { background: rgba(127, 216, 255, .18); border-color: rgba(127, 216, 255, .5); }
+
+/* Guide + bubble: glass speech panel with a 1px tail. */
+.guide { display: flex; align-items: flex-start; gap: .85rem; }
+.guide-row { align-items: center; }
+.guide-figure {
+  flex: none; width: 64px; height: 64px;
+  animation: float 4.4s var(--ease) infinite;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .5));
+}
+.guide-figure svg { width: 100%; height: 100%; display: block; }
+.bubble {
+  position: relative; flex: 1;
+  background: linear-gradient(180deg, var(--glass-2), var(--glass-1));
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  padding: .95rem 1.15rem;
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(14px);
+}
+.bubble::before {
+  content: ""; position: absolute; left: -6px; top: 28px;
+  width: 11px; height: 11px;
+  background: var(--glass-2);
+  border-left: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2);
+  transform: rotate(45deg);
+}
+
+.path-picker { margin-top: .4rem; }
+.path-label { font-size: .88rem; color: var(--text-3); margin-bottom: .5rem; }
+.planet-jump { display: flex; flex-wrap: wrap; gap: .35rem; }
+.jump-chip {
+  display: inline-flex; align-items: center; gap: .45rem;
+  background: var(--glass-1);
+  border: 1px solid var(--line);
+  border-radius: 999px; padding: .26rem .72rem .26rem .3rem;
+  font-size: .84rem; font-weight: 550; color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t), transform var(--t);
+}
+.jump-chip:hover { background: var(--glass-3); border-color: var(--line-3); color: #fff; transform: translateY(-1px); }
+.jump-chip svg { flex: none; }
+
+/* Three learning promises */
+.promise-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: .8rem; margin-top: 2.2rem; list-style: none;
+}
+.promise {
+  background: linear-gradient(180deg, var(--glass-2), var(--glass-1));
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 1.05rem 1.15rem;
+  display: flex; flex-direction: column; gap: .18rem;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(12px);
+}
+.promise strong { font-size: 1rem; font-weight: 620; }
+.promise span:last-child { color: var(--text-2); font-size: .92rem; }
+.promise-ico {
+  width: 26px; height: 26px; border-radius: 8px;
+  display: grid; place-items: center; margin-bottom: .5rem;
+  font-size: .78rem; font-weight: 700;
+  color: var(--gold);
+  background: rgba(255, 194, 75, .12);
+  border: 1px solid rgba(255, 194, 75, .28);
+}
+
+/* ---------- 9. Panels & cards ---------- */
+.panel {
+  background: linear-gradient(180deg, var(--glass-2), var(--glass-1));
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: clamp(1rem, 2.6vw, 1.6rem);
+  margin-top: 1.1rem;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(14px);
+}
+.panel-quiet { background: linear-gradient(180deg, var(--glass-1), rgba(255, 255, 255, .02)); }
+.panel-head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .6rem;
+  margin-bottom: .85rem;
+}
+.panel-title { font-size: 1.14rem; font-weight: 620; }
+.lede-inline { color: var(--text-2); margin-bottom: 1rem; max-width: 70ch; }
+
+/* ---------- 10. Pre-training term cards ---------- */
+.term-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(238px, 1fr));
+  gap: .85rem;
+}
+.term-card {
+  display: flex; flex-direction: column; gap: .5rem;
+  background: linear-gradient(180deg, var(--glass-2), var(--glass-1));
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 1.1rem 1.15rem;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(12px);
+  transition: transform var(--t), border-color var(--t), box-shadow var(--t);
+}
+.term-card:hover { transform: translateY(-2px); border-color: var(--line-2); box-shadow: var(--shadow-lift); }
+.term-card svg { width: 96px; height: 96px; }   /* 图案比文字大：不受正文尺寸限制 */
+.term-name { font-size: 1.16rem; font-weight: 620; }
+.term-name small { font-size: .74rem; font-weight: 400; color: var(--text-3); letter-spacing: .06em; }
+.term-def { color: var(--text-2); font-size: .95rem; }
+.term-card .btn { align-self: flex-start; margin-top: .2rem; }
+
+/* ---------- 11. Modules ---------- */
+.module-nav { display: flex; flex-wrap: wrap; gap: .35rem; margin: .5rem 0 .9rem; }
+.mod-chip {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: var(--glass-1); border: 1px solid var(--line);
+  border-radius: 999px; padding: .42rem .85rem;
+  color: var(--text-2); font-size: .87rem; font-weight: 550;
+  cursor: pointer;
+  transition: background var(--t), color var(--t), border-color var(--t);
+}
+.mod-chip:hover { background: var(--glass-2); color: var(--text); }
+.mod-chip .mod-num {
+  width: 20px; height: 20px; border-radius: 6px;
+  display: grid; place-items: center;
+  font-size: .72rem; font-weight: 700;
+  background: var(--glass-2); color: var(--text-2);
+}
+.mod-chip.is-active {
+  background: var(--glass-3); border-color: var(--line-3); color: #fff; font-weight: 620;
+}
+.mod-chip.is-active .mod-num { background: var(--gold); color: var(--ink); }
+.mod-chip.is-done .mod-num { color: var(--ink); background: var(--mint); }
+
+.progress-track {
+  height: 3px; border-radius: 999px; overflow: hidden;
+  background: rgba(255, 255, 255, .08);
+}
+.progress-track span {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--gold), var(--gold-2));
+  box-shadow: 0 0 12px rgba(255, 194, 75, .6);
+  transition: width .4s var(--ease);
+}
+
+.module { margin-top: 1.6rem; }
+.module[hidden] { display: none; }
+.module-head { margin-bottom: 1.1rem; }
+.module-kicker {
+  font-size: 11px; font-weight: 600; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.module-title {
+  font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+  margin: .35rem 0 .5rem;
+}
+
+/* Ideal (top) / Real (bottom) bands — accent-tinted glass, not colour blocks.
+   [L2-Ideal–Real] gold = the playful "imagine" half, cyan = the factual half. */
+.band {
+  position: relative;
+  border-radius: var(--r-card);
+  padding: 1.1rem clamp(1rem, 2.6vw, 1.5rem);
+  margin-bottom: .9rem;
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+}
+.band-ideal {
+  background: linear-gradient(180deg, rgba(255, 194, 75, .10), rgba(255, 194, 75, .03));
+  border-color: rgba(255, 194, 75, .26);
+}
+.band-real {
+  background: linear-gradient(180deg, rgba(127, 216, 255, .09), rgba(127, 216, 255, .025));
+  border-color: rgba(127, 216, 255, .24);
+}
+.band-tag {
+  display: inline-flex; align-items: center; gap: .45rem;
+  margin-bottom: .8rem;
+  /* 可读性修正：原来是 10.5px + 全大写 + 0.16em 字距 —— 全站最难读的排法，
+     却用在“想象/真实”这两个结构标签上。删掉文案重复之后，把字号还给读者。 */
+  font-size: 11.5px; font-weight: 600; letter-spacing: .02em;
+}
+.band-ideal .band-tag { color: var(--gold); }
+.band-real .band-tag { color: var(--cyan); }
+.band-tag::before { content: ""; width: 18px; height: 1px; background: currentColor; opacity: .8; }
+
+/* Three columns: Given | figure | New                                    [L2-Given–New] */
+.module-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: .85rem; align-items: start;
+}
+.pane {
+  background: linear-gradient(180deg, var(--glass-2), var(--glass-1));
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 1.05rem 1.1rem;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(12px);
+}
+.pane-figure {
+  /* 这一栏放的是"首页那段动图的小号复制"，底色也跟首页对齐：
+     去掉原来偏蓝的 radial（那是别的模块的卡片色），只留同一阶深蓝，
+     动画后面再叠一层和首页一样的暖色柔光（.orbit-stage::before）。 */
+  background:
+    linear-gradient(180deg, #0b1230, #070c1d);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-lift);
+}
+/* 首页动画后面那层暖色柔光，原样搬到学习页这一段上（同一张图该有同一层光） */
+.orbit-stage { position: relative; }
+.orbit-stage::before {
+  content: ""; position: absolute; inset: -8% 0;
+  background: radial-gradient(closest-side, rgba(255, 194, 75, .10), transparent 70%);
+  pointer-events: none;
+}
+.pane-title {
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .7rem;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.pane-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-3); }
+.pane-new .pane-title { color: var(--gold); }
+.pane-new .pane-dot { background: var(--gold); box-shadow: 0 0 8px rgba(255, 194, 75, .9); }
+
+.bullet-list { list-style: none; display: flex; flex-direction: column; gap: .55rem; }
+.bullet-list li {
+  position: relative; padding-left: 1rem;
+  color: var(--text-2); font-size: 1rem;
+}
+.bullet-list li::before {
+  content: ""; position: absolute; left: 0; top: .62em;
+  width: 5px; height: 1px; background: var(--line-3);
+}
+.bullet-new li { color: var(--text); }
+.bullet-new li::before { width: 6px; height: 6px; border-radius: 50%; top: .48em; background: var(--gold); }
+
+/* figure column */
+.figure-holder { position: relative; display: flex; justify-content: center; padding: 2.5rem 0 2.7rem; }
+.planet-figure { display: flex; justify-content: center; }
+.planet-figure svg { display: block; filter: saturate(1.03); }
+
+.kw-row { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: center; margin-top: .7rem; }
+.kw {
+  display: inline-flex; align-items: center;
+  background: var(--glass-2);
+  border: 1px solid var(--line-2);
+  border-radius: 999px; padding: .18rem .62rem;
+  font-size: 12.5px; font-weight: 550; letter-spacing: .01em;
+  color: var(--text);
+}
+.planet-card .kw, .term-card .kw { background: var(--glass-2); border-color: var(--line); color: var(--text-2); }
+
+.speak-row { display: flex; justify-content: center; margin-top: .85rem; }
+
+.figure-caption {
+  margin-top: .7rem; text-align: center;
+  font-size: .84rem; color: var(--text-3);
+}
+
+/* Signalling callouts — hairline labels with a 1px leader.      [L3-Signaling] */
+.callout {
+  position: absolute;
+  font-size: 12px; font-weight: 600; letter-spacing: .02em;
+  color: var(--text);
+  background: rgba(6, 10, 24, .82);
+  border: 1px solid var(--line-2);
+  border-radius: 999px; padding: .26rem .7rem;
+  backdrop-filter: blur(8px);
+  max-width: 62%;
+}
+.callout::after { content: ""; position: absolute; background: var(--line-3); }
+.callout-a { left: 0; top: 0; }
+.callout-a::after { left: 50%; top: 100%; width: 1px; height: 20px; }
+.callout-b { right: 0; bottom: 0; }
+.callout-b::after { left: 50%; bottom: 100%; width: 1px; height: 20px; }
+.callout-a::before, .callout-b::before {
+  content: ""; position: absolute; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--gold);
+}
+.callout-a::before { left: calc(50% - 2px); top: calc(100% + 18px); }
+.callout-b::before { left: calc(50% - 2px); bottom: calc(100% + 18px); }
+
+/* Planet cards (module 3 / 4 / 5) */
+.mini-planet-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .55rem;
+}
+.planet-card {
+  display: flex; flex-direction: column; align-items: center; gap: .3rem;
+  background: var(--glass-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+  padding: .7rem .5rem; text-align: center;
+  transition: border-color var(--t), background var(--t), transform var(--t);
+}
+.planet-card:hover { border-color: var(--line-2); background: var(--glass-2); transform: translateY(-2px); }
+.planet-card strong { font-size: .98rem; font-weight: 620; }
+.planet-card figcaption { display: flex; flex-direction: column; align-items: center; gap: .3rem; }
+.planet-card .kw { font-size: 11.5px; }
+.two-planet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; }
+
+/* Real-data row                                                    [L2-Salience] */
+.fact-row { display: flex; flex-wrap: wrap; gap: .6rem; list-style: none; }
+.fact {
+  flex: 1 1 150px;
+  background: var(--glass-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+  padding: .7rem .85rem;
+  display: flex; flex-direction: column; gap: .1rem;
+}
+.fact b {
+  font-size: 1.42rem; font-weight: 660; letter-spacing: -.03em;
+  color: #fff; font-variant-numeric: tabular-nums;
+}
+.fact span { font-size: .82rem; color: var(--text-3); }
+
+.step-footer {
+  display: flex; flex-wrap: wrap; gap: .6rem; justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+/* ---------- 12. Practice ---------- */
+.tab-row {
+  display: flex; flex-wrap: wrap; gap: .2rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1.1rem;
+}
+.tab {
+  display: inline-flex; align-items: center; gap: .45rem;
+  position: relative;
+  background: transparent; border: 0;
+  padding: .6rem .9rem .7rem;
+  color: var(--text-3); font-size: .9rem; font-weight: 550;
+  cursor: pointer;
+  transition: color var(--t);
+}
+.tab:hover { color: var(--text); }
+.tab.is-active { color: #fff; font-weight: 620; }
+.tab.is-active::after {
+  content: ""; position: absolute; left: .9rem; right: .9rem; bottom: -1px;
+  height: 2px; background: var(--gold); border-radius: 2px;
+  box-shadow: 0 0 12px rgba(255, 194, 75, .7);
+}
+.tab-panel[hidden] { display: none; }
+
+.instruction-list {
+  list-style: none; counter-reset: ins;
+  display: flex; flex-direction: column; gap: .35rem;
+  margin-bottom: 1rem; padding-left: 0;
+}
+.instruction-list li {
+  counter-increment: ins;
+  position: relative; padding-left: 1.9rem;
+  font-size: .93rem; color: var(--text-2);
+}
+.instruction-list li::before {
+  content: counter(ins);
+  position: absolute; left: 0; top: .1rem;
+  width: 1.25rem; height: 1.25rem; border-radius: 6px;
+  display: grid; place-items: center;
+  font-size: .7rem; font-weight: 700;
+  color: var(--gold); background: rgba(255, 194, 75, .12);
+  border: 1px solid rgba(255, 194, 75, .26);
+}
+
+/* Drag board — a dark instrument panel.                    [L1-Embodiment] */
+.drag-board {
+  position: relative;
+  background:
+    radial-gradient(140% 90% at 50% -10%, rgba(94, 124, 255, .14), transparent 60%),
+    linear-gradient(180deg, #0b1230, #070c1d);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  padding: 1.1rem;
+  box-shadow: var(--shadow-lift);
+}
+/* 圆圈之间的间距：太小不仅看着挤，圆圈下方的行星名（比小圆圈还宽）会互相压住。
+   2rem（32px）在 1440px 下总宽约 890px，仍装得下；窄屏收到 22px 以免横向滚动过长。 */
+/* gap 是最小间距；宽屏上用 space-between 把富余宽度摊到行星之间（1440px 下实测约 58px），
+   窄屏内容比容器宽时 space-between 不起作用，就退回到 22px 的最小间距并横向滚动。 */
+.orbit-track { display: flex; align-items: center; justify-content: space-between; gap: 2rem; overflow-x: auto; padding-bottom: .6rem; }
+.orbit-track { padding-left: 6px; padding-right: 24px; scrollbar-width: thin; }   /* 免得行星名把轨道顶出横向滚动条 */
+.sun-slot {
+  flex: none; width: 76px; height: 76px; border-radius: 50%;   /* JS 会按显示直径覆盖 */
+  display: grid; place-items: center;
+  font-size: .72rem; font-weight: 620; letter-spacing: .06em; text-transform: uppercase;
+  color: #2a1c04;
+  background: radial-gradient(circle at 34% 30%, #fff3cf, var(--sun) 58%, var(--sun-3) 100%);
+  box-shadow: 0 0 40px rgba(255, 194, 75, .35), inset 0 0 20px rgba(255, 255, 255, .3);
+}
+.orbit-slot {
+  flex: none; position: relative;
+  /* 宽高由 JS 按行星的显示直径写成 inline style；这里只给一个兜底值 */
+  width: 92px; height: 92px; border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, .22);
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, .025);
+  transition: background var(--t), border-color var(--t), transform var(--t);
+}
+/* 放进去的行星要"可见球体"正好落在圆圈内、并且居中。
+   planetSVG 的球体只占画布 60%，所以画布由 JS 放大 200/120 倍（planetArtBox），
+   画布因此比圆圈大。两点必须同时成立：
+   ① 不能写 width:100%（那会把画布压回圆圈大小，球体又只剩六成大）；
+   ② 必须绝对定位 + translate(-50%,-50%) 居中——grid 的 place-items:center 只对
+      "和格子一样大"的元素有效，超出容器的元素会向右下溢出（实测偏了 +30px）。 */
+.orbit-slot svg {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  flex: none; max-width: none;
+  pointer-events: none;   /* 画布比圆圈大，别挡住旁边圆圈的点击 */
+}
+.orbit-slot .slot-name {
+  position: absolute; top: calc(100% + 2px); left: 50%; transform: translateX(-50%);
+  white-space: nowrap; font-size: 10.5px; letter-spacing: .02em; color: var(--text-2);
+}
+.orbit-slot .slot-index {
+  position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  color: var(--text-2);
+  background: #0b1230;
+  border: 1px solid var(--line);
+  border-radius: 999px; padding: .02rem .38rem;
+}
+.orbit-slot.is-over { border-color: var(--gold); border-style: solid; background: rgba(255, 194, 75, .12); transform: scale(1.04); }
+.orbit-slot.is-filled { border-style: solid; border-color: var(--line-2); background: rgba(255, 255, 255, .05); }
+.orbit-slot.is-correct { border-color: rgba(111, 227, 176, .55); box-shadow: 0 0 20px -6px rgba(111, 227, 176, .5); }
+.orbit-slot.is-wrong { border-color: rgba(255, 178, 122, .7); }
+.slot-name { font-size: 11px; color: var(--text-2); letter-spacing: .02em; }
+
+.track-legend {
+  display: flex; align-items: center; gap: .45rem;
+  color: var(--text-3); font-size: .82rem; margin: .1rem 0 .9rem;
+}
+.track-note { margin: -.4rem 0 .9rem; font-size: .78rem; color: var(--text-3); max-width: 74ch; }
+.orbit-track { padding-bottom: 1.1rem; }   /* 给圆圈下方的行星名留位置 */
+.arrow-line { display: inline-flex; color: var(--text-3); animation: slide 3.2s var(--ease) infinite; }
+
+.chip-tray {
+  display: flex; flex-wrap: wrap; gap: .7rem .75rem;
+  min-height: 88px; padding: .65rem;
+  background: rgba(255, 255, 255, .03);
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-s);
+}
+.planet-chip {
+  display: flex; align-items: center; gap: .45rem;
+  background: linear-gradient(180deg, var(--glass-3), var(--glass-2));
+  border: 1px solid var(--line-2);
+  border-radius: 999px; padding: .24rem .8rem .24rem .28rem;
+  font-size: .9rem; font-weight: 550; color: var(--text);
+  cursor: grab; touch-action: none; user-select: none;
+  transition: transform var(--t), border-color var(--t);
+}
+.planet-chip:hover { transform: translateY(-1px); border-color: var(--line-3); }
+/* 卡盘里的行星尺寸由 planetSVG(key, size) 的属性决定（保持相对大小），
+   CSS 不再固定它，否则所有行星又会被拉成一样大 */
+.planet-chip svg { flex: none; height: auto; }
+.planet-chip.is-selected { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(255, 194, 75, .4); }
+.planet-chip.is-placed { opacity: .28; cursor: default; pointer-events: none; }
+.planet-chip.is-dragging { opacity: 0; }
+.drag-ghost {
+  position: fixed; z-index: 90; pointer-events: none;
+  transform: translate(-50%, -50%) scale(1.1);
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, .6));
+}
+
+.practice-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; margin-top: 1rem; }
+.score-line { font-size: .88rem; color: var(--text-3); }
+.score-line b { font-size: 1.2rem; color: #fff; font-weight: 660; font-variant-numeric: tabular-nums; }
+.score-line-big { margin-bottom: .8rem; }
+
+.feedback { margin-top: .7rem; font-size: .93rem; font-weight: 500; }
+.feedback.ok { color: var(--mint); }
+.feedback.try { color: var(--amber); }
+.hint-line { margin-top: .45rem; color: var(--text-3); font-size: .9rem; }
+
+/* Self-explanation */
+.reason-chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: 1rem; }
+.reason-chip {
+  background: var(--glass-1); border: 1px solid var(--line-2);
+  border-radius: 999px; padding: .42rem .9rem;
+  font-size: .9rem; font-weight: 550; color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t);
+}
+.reason-chip:hover { background: var(--glass-2); color: var(--text); }
+.reason-chip[aria-pressed="true"] {
+  background: rgba(255, 194, 75, .14);
+  border-color: rgba(255, 194, 75, .5);
+  color: #ffe7b4; font-weight: 620;
+}
+
+.field-label { display: block; margin-bottom: .45rem; font-size: .9rem; font-weight: 550; color: var(--text-2); }
+.text-area {
+  width: 100%; font: inherit; font-size: .95rem;
+  color: var(--text);
+  background: rgba(6, 10, 24, .55);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-s);
+  padding: .8rem .9rem;
+  resize: vertical;
+  transition: border-color var(--t), background var(--t);
+}
+.text-area::placeholder { color: var(--text-3); }
+.text-area:focus { border-color: var(--gold); background: rgba(6, 10, 24, .7); outline: none; }
+
+.model-answer {
+  margin-top: .9rem; padding: .9rem 1.1rem;
+  background: rgba(111, 227, 176, .07);
+  border: 1px solid rgba(111, 227, 176, .26);
+  border-left: 2px solid var(--mint);
+  border-radius: var(--r-s);
+}
+.model-answer h4 { font-size: .95rem; font-weight: 620; color: var(--mint); margin-bottom: .5rem; }
+.model-answer ul { list-style: none; display: flex; flex-direction: column; gap: .35rem; }
+.model-answer li { position: relative; padding-left: 1.1rem; color: var(--text-2); font-size: .93rem; }
+.model-answer li::before { content: ""; position: absolute; left: 0; top: .6em; width: 7px; height: 1px; background: var(--mint); opacity: .7; }
+.model-answer p { margin-top: .6rem; color: var(--text); font-size: .93rem; }
+
+/* Quiz */
+.quiz-block { display: flex; flex-direction: column; gap: .7rem; }
+.q-item {
+  background: var(--glass-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+  padding: .9rem 1rem;
+  transition: border-color var(--t), background var(--t);
+}
+.q-item:hover { border-color: var(--line-2); }
+.q-text { font-weight: 600; font-size: .98rem; margin-bottom: .65rem; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+/* 题目旁边的地小球：答对答错都会换表情并说一句 */
+.q-buddy { display: flex; align-items: center; gap: .6rem; margin-bottom: .55rem; }
+.q-buddy .guide-figure { width: 44px; height: 44px; flex: none; animation: none; }
+.q-buddy-line { margin: 0; font-size: .92rem; color: var(--text-2); }
+.q-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--violet); background: rgba(159, 176, 255, .12);
+  border: 1px solid rgba(159, 176, 255, .28);
+  padding: .1rem .45rem; border-radius: 5px;
+}
+.q-options { display: flex; flex-direction: column; gap: .35rem; }
+.opt {
+  text-align: left;
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: .55rem .85rem;
+  font-size: .93rem; color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t);
+}
+.opt:hover { background: var(--glass-2); border-color: var(--line-3); color: #fff; }
+.opt.is-correct {
+  background: rgba(111, 227, 176, .10);
+  border-color: rgba(111, 227, 176, .5);
+  color: #d8fff0; font-weight: 600;
+}
+.opt.is-wrong {
+  background: rgba(255, 178, 122, .08);
+  border-color: rgba(255, 178, 122, .4);
+  color: #ffe0cc;
+}
+.opt[disabled] { cursor: default; }
+.q-explain {
+  margin-top: .6rem; padding-top: .6rem;
+  border-top: 1px solid var(--line);
+  font-size: .9rem; color: var(--text-2);
+}
+
+/* ---------- 13. Summary ---------- */
+/* 「回忆星球」那一行现在只放地小球的提示（自评清单已经挪到星球图下方） */
+.summary-lede-row {
+  display: block; margin-bottom: .9rem;
+}
+/* 一整行宽的气泡读起来太累，压到 78 字宽 */
+.summary-lede-row .bubble { max-width: 78ch; }
+.checklist {
+  list-style: none;
+  background: linear-gradient(180deg, var(--glass-2), var(--glass-1));
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 1.05rem 1.15rem;
+  display: flex; flex-direction: column; gap: .6rem;
+  box-shadow: var(--shadow-card);
+}
+.checklist li { display: flex; gap: .6rem; align-items: flex-start; font-size: .92rem; color: var(--text-2); }
+/* 自评清单的容器：面板里不再重复画一层卡片底，四条摊成一行，省高度
+   （总结页要留在一屏内，这一块是新加进来的，所以边距都收紧一点） */
+.checklist-box { margin-top: .7rem; padding: .6rem .9rem .65rem; }
+/* 密度档位里 `.panel` 写了自己的 padding，比上面这条晚出现；
+   这里用 id 提一级，保证自评清单这一块按自己的（更紧的）间距走。 */
+#view-summary .checklist-box { padding: .6rem .9rem .65rem; }
+.checklist-box .panel-head { margin-bottom: .4rem; }
+.checklist-box .panel-title { font-size: 1.02rem; }
+.checklist-box .theory-badge { margin-left: auto; }
+.checklist-box .checklist {
+  background: none; border: 0; box-shadow: none; padding: 0;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .5rem .95rem;
+}
+@media (max-width: 1240px) {
+  .checklist-box .checklist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1000px) {
+  .checklist-box .checklist { grid-template-columns: 1fr; }
+}
+.checklist input {
+  appearance: none; width: 18px; height: 18px; flex: none; margin-top: .18rem;
+  border: 1px solid var(--line-3); border-radius: 5px; background: rgba(255, 255, 255, .04);
+  cursor: pointer; transition: background var(--t), border-color var(--t);
+}
+.checklist input:checked {
+  background: var(--mint);
+  border-color: var(--mint);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23061a12' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'><path d='M20 6 9 17l-5-5'/></svg>");
+  background-size: 13px 13px; background-position: center; background-repeat: no-repeat;
+}
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(186px, 1fr)); gap: .75rem; }
+.summary-card {
+  display: flex; flex-direction: row; align-items: center; gap: .55rem;
+  text-align: left;
+  background: linear-gradient(180deg, var(--glass-2), var(--glass-1));
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: .7rem .8rem;      /* 名字与说明收起来之后，卡片不需要原来那么厚 */
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--t), border-color var(--t), box-shadow var(--t);
+}
+.summary-card:hover { transform: translateY(-3px); border-color: var(--line-3); box-shadow: var(--shadow-lift); }
+.summary-card svg { flex: none; }               /* 尺寸由 planetSVG 决定，不再被 CSS 压小 */
+.summary-card strong { font-size: 1.05rem; font-weight: 620; }
+.summary-card .order-num {
+  font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-3);
+}
+/* 总结页改成"先回忆、再核对"：卡片只给图 + 序号，星球的名字和说明都收起来了
+   [用户要求：不要显示星球的名字，也不要有额外的提示文字]。
+   想好了点一下，回到知识页面看答案。 */
+.summary-card .summary-text { justify-content: center; }
+.summary-card p { font-size: .86rem; color: var(--text-2); }
+.summary-text { display: flex; flex-direction: column; gap: .12rem; min-width: 0; }
+/* 星球的说明最多两行，卡片高度才可控 */
+.summary-card p {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; margin: 0;
+}
+.transfer-box { margin-top: .85rem; }
+.transfer-box .theory-badge { margin-left: auto; }
+
+/* ---------- 14. Footer ---------- */
+.site-footer {
+  /* 署名行不需要这么大的上下留白：它占的高度直接决定整页要不要滚动。 */
+  margin-top: 1.5rem;
+  padding: 1.1rem 1rem 1.6rem;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: .8rem; color: var(--text-3);
+}
+.site-footer p { max-width: 70ch; margin: 0 auto; }
+
+/* ---------- 15. Planet artwork & motion ---------- */
+/* Planets are lit from the upper-left; the terminator shading is what makes
+   them read as spheres instead of flat discs.        [L1-Visual affordance] */
+/* container-type 让卡片能按“动画自身宽度”决定形态（不用靠猜测的断点） */
+.orbit-map { position: relative; width: 100%; container-type: inline-size; }
+.orbit-map svg { width: 100%; height: auto; display: block; }
+
+/* ---------- 15a. The animated Solar System ----------
+   [L2-Narrative] planets + trajectory tail + direction arrow = a process, not a
+   still picture. [L3-Coherence] this is the only motion on the page, and it is
+   pausable; the tail shows the trajectory the planet has just travelled. */
+.solar-svg { overflow: visible; }
+.solar-body { cursor: pointer; }
+.solar-body .solar-art { transition: transform .18s var(--ease); }
+.solar-body:hover .solar-art,
+.solar-body:focus-visible .solar-art { transform: scale(1.22); }
+.solar-body:focus-visible { outline: none; }
+.solar-body:focus-visible .solar-hit { stroke: var(--gold); stroke-width: 1.4; }
+.solar-trail { pointer-events: none; }
+.solar-label, .solar-sun-label { font-family: inherit; }
+.solar-sun-label { font-weight: 600; }
+.solar-caption {
+  margin: .5rem auto 0; max-width: 46ch; text-align: center;
+  font-size: .84rem; color: var(--text-2);
+}
+.solar-note {
+  margin: .35rem auto 0; max-width: 48ch; text-align: center;
+  font-size: .76rem; color: var(--text-3);
+}
+.hero-solar { max-width: 660px; margin: 0 auto; }
+
+/* the card that appears right next to a clicked planet   [L3-Contiguity] */
+.planet-pop {
+  position: absolute; z-index: 6;
+  width: 268px; padding: .85rem .95rem .95rem;
+  background: linear-gradient(180deg, rgba(16, 26, 63, .96), rgba(8, 14, 34, .98));
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(16px);
+}
+.planet-pop[hidden] { display: none; }
+.planet-pop::after {
+  content: ""; position: absolute; left: -6px; top: 26px;
+  width: 11px; height: 11px;
+  background: rgba(16, 26, 63, .96);
+  border-left: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2);
+  transform: rotate(45deg);
+}
+/* when the card sits on the left of its planet, the pointer flips to the right */
+.planet-pop.pop-left::after { left: auto; right: -6px; transform: rotate(225deg); }
+.planet-pop .pop-order {
+  font-size: 10.5px; font-weight: 600; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gold);
+}
+.planet-pop .pop-name { font-size: 1.12rem; margin: .1rem 0 .35rem; }
+.planet-pop .pop-fact { font-size: .86rem; color: var(--text-2); }
+/* 卡片里的「和地球比」一句话概括。原来这里是 4 行原始数字清单
+   （直径 km / AU / 公转天数 / 自转小时），对 8–10 岁孩子属于多余负荷，
+   已删除；现在只留一块浅底、好读的一句话 [L3-Coherence]。 */
+.planet-pop .pop-compare {
+  font-size: .85rem; line-height: 1.5; color: var(--text-2);
+  background: var(--glass-1); border: 1px solid var(--line);
+  border-radius: 8px; padding: .38rem .55rem; margin: .5rem 0 .7rem;
+}
+.planet-pop .pop-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.planet-pop .pop-actions .btn { padding: .42rem .7rem; font-size: .82rem; }
+.pop-close {
+  position: absolute; top: .5rem; right: .5rem;
+  width: 26px; height: 26px; display: grid; place-items: center;
+  background: var(--glass-1); border: 1px solid var(--line);
+  border-radius: 8px; color: var(--text-2); cursor: pointer;
+  transition: background var(--t), color var(--t);
+}
+.pop-close:hover { background: var(--glass-3); color: #fff; }
+/* 动画本身窄于 540px 时，卡片改为跟在动画下方，避免盖住行星 */
+@container (max-width: 540px) {
+  .planet-pop { position: static; width: auto; margin-top: .7rem; }
+  .planet-pop.pop-left::after, .planet-pop::after { display: none; }
+}
+
+.orbit-spin { transform-origin: 200px 200px; transform-box: view-box; }
+.orbit-spin.animate { animation: spin linear infinite; }
+.planet-node { cursor: pointer; }
+.planet-node circle { transition: stroke var(--t); }
+.planet-node:hover circle, .planet-node:focus-visible circle { stroke: #fff; stroke-width: 2.4; }
+.sun-core { animation: pulse 5s var(--ease) infinite; transform-origin: 200px 200px; transform-box: view-box; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes slide {
+  0%, 100% { transform: translateX(0); opacity: .55; }
+  50% { transform: translateX(6px); opacity: 1; }
+}
+.wave-arm { transform-origin: 74% 42%; animation: wave 2.6s var(--ease) infinite; }
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-14deg); }
+}
+.blink { animation: blink 5.6s steps(1) infinite; }
+@keyframes blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(.1); }
+}
+.ring-spin { transform-origin: center; transform-box: fill-box; animation: ringTilt 12s var(--ease) infinite; }
+@keyframes ringTilt {
+  0%, 100% { transform: rotate(-14deg); }
+  50% { transform: rotate(-9deg); }
+}
+
+/* ---------- 15b. Density pass: 尽量让每一页在一屏内看完 ----------
+   起因：原来 1440×900 下学习模块要滑 1.8 屏、总结 1.9 屏，1100px 宽时吸顶 header
+   甚至占到 171px（设置按钮换行）。这轮把垂直空间压回来：
+   ① header 在宽屏合成一行（品牌｜导航｜设置）；
+   ② 学习模块的理想／真实两条 band 由"大色块"改成"一行条"；
+   ③ 图区不再撑满一整列的高度；
+   ④ 总结页的行星卡片 5 列排布、卡片更矮。
+   注意：本段写在 §16 响应式之前，好让下面的媒体查询仍然能覆盖它。 */
+/* 宽屏两行：① 品牌｜设置  ② 学习路径条（5 站横排）
+   .site-header 保持 column，两行由 .header-top 与 .main-nav 两个块决定，
+   DOM 顺序 = 视觉顺序，键盘 Tab 顺序不会和眼睛看到的错位。 */
+.site-header { flex-direction: column; gap: .3rem; padding: .34rem clamp(.8rem, 3vw, 1.6rem) .38rem; }
+.header-top { flex-wrap: nowrap; gap: .5rem; }
+.brand { flex: 0 0 auto; gap: .6rem; }
+.brand-mark { width: 30px; height: 30px; }
+.brand-sun { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; }
+.brand-title { font-size: 1rem; }
+.brand-sub { font-size: .72rem; }
+.main-nav { flex: 0 0 auto; }
+.nav-btn { padding: .2rem .45rem; }
+.step-label { font-size: .82rem; }
+.header-controls { flex: 0 0 auto; }
+.ctl { padding: .34rem .58rem; font-size: .76rem; }
+
+.view { padding: clamp(.9rem, 2vw, 1.4rem) clamp(.7rem, 2.4vw, 1.1rem) 2rem; }
+.view-head { margin-bottom: .9rem; }
+.view-title { font-size: clamp(1.4rem, 2.6vw, 1.9rem); margin: .35rem 0 .3rem; }
+.view-lede { font-size: .95rem; }
+
+/* 学习模块：一屏装下 */
+.module { margin-top: .9rem; }
+.module-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem .8rem; margin-bottom: .55rem; }
+.module-title { font-size: clamp(1.15rem, 2.1vw, 1.5rem); margin: 0; }
+.module-nav { margin: .35rem 0 .5rem; }
+.mod-chip { padding: .34rem .7rem; font-size: .82rem; }
+
+/* 理想 / 真实：由竖着的大色块改成一行横条 */
+.band { padding: .55rem .9rem; margin-bottom: .55rem; border-radius: var(--r-s); }
+.band-ideal, .band-real { display: flex; align-items: center; gap: .9rem; }
+.band-tag { margin: 0; flex: 0 0 auto; }
+.band .guide { flex: 1 1 auto; align-items: center; gap: .6rem; }
+.band .guide-figure { width: 40px; height: 40px; }
+.band .bubble { background: none; border: 0; box-shadow: none; padding: 0; backdrop-filter: none; }
+.band .bubble::before { display: none; }
+.band .fact-row { flex: 1 1 auto; }
+.band .fact { padding: .45rem .7rem; }
+.band .fact b { font-size: 1.12rem; }
+.band .fact span { font-size: .76rem; }
+
+/* 三栏：图区收窄，两栏文字更紧凑 */
+.module-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.34fr) minmax(0, 1fr); gap: .7rem; }
+.pane { padding: .85rem .95rem; }
+.pane-title { margin-bottom: .5rem; }
+.bullet-list { gap: .4rem; }
+.bullet-list li { font-size: .95rem; }
+/* 学习页那段动图＝首页那段的小号复制，所以别收得太狠：
+   宽度只取首页的六成左右（首页在 900px 高的屏上是 864px） */
+.solar-mini { max-width: min(100%, 520px); margin: 0 auto; }
+.figure-holder { padding: 1.1rem 0 1.2rem; }
+.callout { font-size: 11.5px; }
+.kw-row { gap: .3rem; margin-top: .5rem; }
+.kw { font-size: 11.5px; padding: .14rem .55rem; }
+.figure-caption { margin-top: .5rem; font-size: .8rem; }
+.speak-row { margin-top: .55rem; }
+.mini-planet-grid { gap: .45rem; }
+.planet-card { padding: .5rem .4rem; gap: .2rem; }
+.planet-card strong { font-size: .88rem; }
+.planet-card .kw { font-size: 12px; }
+/* 星球卡里的插图尺寸由 JS 按真实比例给定，CSS 不再设上限 */
+.step-footer { margin-top: .8rem; }
+
+/* 预习页 / 练习页 / 总结页 */
+.term-card { padding: .85rem .95rem; gap: .35rem; }
+.term-card svg { width: 96px; height: 96px; }
+.term-name { font-size: 1.05rem; }
+.term-def { font-size: .88rem; }
+.panel { padding: clamp(.8rem, 1.8vw, 1.15rem); margin-top: .8rem; }
+.panel-head { margin-bottom: .6rem; }
+.panel-title { font-size: 1.05rem; }
+.instruction-list { margin-bottom: .7rem; gap: .25rem; }
+.instruction-list li { font-size: .88rem; }
+.drag-board { padding: .85rem; }
+.orbit-slot { width: 88px; height: 88px; }
+.sun-slot { width: 68px; height: 68px; }
+.chip-tray { min-height: 70px; padding: .5rem; }
+.planet-chip { padding: .2rem .7rem .2rem .24rem; font-size: .85rem; }
+.practice-controls { margin-top: .7rem; }
+.quiz-block { gap: .5rem; }
+.q-item { padding: .7rem .85rem; }
+.q-text { margin-bottom: .5rem; font-size: .93rem; }
+.q-options { gap: .3rem; }
+.opt { padding: .45rem .75rem; font-size: .88rem; }
+.promise-row { margin-top: 1.2rem; gap: .7rem; }
+.promise { padding: .85rem .95rem; }
+.summary-lede-row { gap: .7rem; margin-bottom: .9rem; }
+.checklist { padding: .85rem .95rem; gap: .45rem; }
+.summary-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .55rem; }
+.summary-card { padding: .6rem .5rem; gap: .25rem; }
+.summary-card svg { width: 62px; height: 62px; }
+.summary-card strong { font-size: .95rem; }
+.summary-card p { font-size: .78rem; }
+.transfer-box { margin-top: .8rem; }
+
+/* 学习区浮动的上一段 / 下一段 */
+.module-dock {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: clamp(.7rem, 2.4vw, 1.2rem); z-index: 46;
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .32rem .4rem;
+  background: linear-gradient(180deg, rgba(16, 26, 63, .96), rgba(8, 14, 34, .98));
+  border: 1px solid var(--line-3);
+  border-radius: 999px;
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(14px);
+}
+.module-dock[hidden] { display: none; }
+.dock-btn {
+  display: inline-flex; align-items: center; gap: .35rem;
+  background: var(--glass-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: .42rem .68rem;
+  color: var(--text); font-size: .82rem; font-weight: 600; cursor: pointer;
+  transition: background var(--t), transform var(--t);
+}
+.dock-btn:hover { background: var(--glass-3); transform: translateY(-1px); }
+.dock-btn[disabled] { opacity: .35; cursor: default; transform: none; }
+.dock-next { background: linear-gradient(180deg, var(--gold-2), var(--gold)); color: #1b1204; border-color: transparent; }
+.dock-now { padding: 0 .3rem; font-size: .78rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.dock-now b { color: #fff; }
+
+/* 宽屏再挤一轮：header 合成一行、总结卡片改横排、预习小测两列、图区略收 */
+@media (min-width: 1001px) {
+  /* 设置按钮只留图标（带 title 与 aria-label），语言按钮保留文字 */
+  .ctl:not(.ctl-strong):not(.ctl-jump) .lang-zh,
+  .ctl:not(.ctl-strong):not(.ctl-jump) .lang-en { display: none; }
+  .brand-sub { display: none; }            /* 副标题省掉，品牌只留一行 */
+  .nav-btn { padding: .16rem .5rem; font-size: .82rem; }
+  .solar-mini { max-width: min(100%, 520px); }   /* 图区高度决定整屏高度，但别小于首页的六成 */
+/* 总结页：行星卡片改横排（星球在左、文字在右），9 张卡压到两行 */
+  .summary-card { flex-direction: row; align-items: center; text-align: left; gap: .55rem; padding: .55rem .7rem; }
+  .summary-card svg { flex: none; }
+  .summary-card .order-num { font-size: 9.5px; }
+  .summary-card strong { font-size: .92rem; }
+  .summary-card p { font-size: .76rem; }
+  .summary-card > * { min-width: 0; }
+  /* 预习页的两道小题并排 */
+  .panel .quiz-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+  /* 预习页排版固定为两行：第一行 4 张术语卡，第二行 2 道题（用户要求） */
+  #term-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ---------- 16. Responsive ---------- */
+@media (max-width: 1000px) {
+  /* 窄屏 / 平板：横排路径条只留数字（点一下就到那一站），
+     环节名与状态词放进常驻的“跳到”菜单里，一个字都不少。 */
+  .main-nav { margin: 0 auto; padding: .18rem .26rem; }
+  .journey { max-width: 100%; }
+  .step-text { display: none; }
+  .nav-btn { padding: .16rem .26rem; gap: 0; }
+  .step-badge { width: 24px; height: 24px; font-size: .7rem; }
+  .journey-step:not(:last-child) .step-link { flex: 0 1 clamp(8px, 2.6vw, 24px); min-width: 8px; margin: 0 .2rem; }
+  /* 副标题在窄屏省掉；设置按钮允许收缩换行 ——
+     否则这一行会把整页撑出横向滚动条（WCAG 1.4.10 Reflow）。 */
+  .brand-sub { display: none; }
+  .header-controls { flex: 1 1 auto; min-width: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .ctl-jump { display: inline-flex; }
+  /* 表格式的横条在窄屏改回竖排，避免挤成一条 */
+  .band-ideal, .band-real { flex-direction: column; align-items: flex-start; gap: .5rem; }
+  .band .fact-row { width: 100%; }
+  .summary-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .orbit-track { gap: 1.375rem; }        /* 窄屏：22px，减少横向滚动距离 */
+  .chip-tray { gap: .55rem; }
+  .hero { grid-template-columns: 1fr; }
+  .hero-art { order: -1; }
+  .module-grid { grid-template-columns: 1fr; }
+  .pane-figure { order: -1; }
+  .summary-lede-row { grid-template-columns: 1fr; }
+  .orbit-map { max-width: 420px; }
+}
+
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  /* 手机上让卡片两列、数据块两列，少滑一屏 */
+  .term-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+  #pretrain-quiz.quiz-block { grid-template-columns: 1fr; }   /* 手机上题目竖排，选项才够宽 */
+  .term-card { padding: .7rem .75rem; }
+  .term-card svg { width: 40px; height: 40px; }
+  .band .fact { flex: 1 1 42%; }
+  .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .jump-chip { font-size: .76rem; padding: .18rem .55rem .18rem .2rem; gap: .3rem; }
+  .jump-chip svg { flex: none; }
+  .site-header { padding: .5rem .8rem .55rem; gap: .35rem; }
+  .brand-sub { display: none; }
+  /* 手机：设置按钮排成一行可横向滑动，避免吸顶 header 吃掉半屏 */
+  .header-top { flex-wrap: wrap; row-gap: .5rem; }
+  .header-controls { flex-wrap: nowrap; overflow-x: auto; width: 100%; scrollbar-width: none; }
+  .header-controls::-webkit-scrollbar { display: none; }
+  .ctl { flex: none; }
+  .ctl { font-size: .76rem; padding: .36rem .55rem; }
+  .callout { display: none; }
+  .orbit-slot { width: 78px; height: 78px; }
+    .sun-slot { width: 64px; height: 64px; font-size: .64rem; }
+  .guide-figure { width: 60px; height: 60px; }
+  /* 手机上卡片改为跟在动画下方，避免盖住行星 [L3-Contiguity 仍成立：紧挨插图] */
+  .planet-pop { position: static; width: auto; margin-top: .7rem; }
+  .planet-pop::after { display: none; }
+  .main-nav { border-radius: 14px; }
+  .nav-btn { padding: .14rem .26rem; }
+}
+
+/* ---------- 17. 一屏排版：不需要上下滑动就看得到信息 ----------
+   目标：课堂笔记本与投影（1440×900、1366×768，尽量到 1280×720）下，
+   每一页都在一屏之内看完。手段是按"视口高度"收紧纵向留白、并把横向空间用起来，
+   而不是把字缩小 —— 8–10 岁读者的可读性优先（见 设计说明 §4.2 的字号修正）。
+   顶部是吸顶 header（宽屏 93px / 手机约 105px），可用高度 ≈ 视口高度 − header 高度。
+
+   本段必须写在这里：所有响应式媒体查询之后、@media print 之前。
+   与前面同优先级的规则冲突时靠"后写者胜"；但要注意 .tab-panel[hidden] 的
+   display:none 需要靠 :not([hidden]) 让开，否则会把隐藏的面板顶出来。 */
+
+/* (a) 宽屏 + 矮屏（1440×900、1366×768、1920×1080 这类笔记本与投影都在这一档） */
+@media (min-width: 1001px) and (max-height: 1100px) {
+  .view { padding-top: .6rem; padding-bottom: .8rem; }
+  /* “第 2 站 / Step 2”与顶部学习路径条说的是同一件事，省掉一行 */
+  .view-kicker { display: none; }
+  .view-head { margin-bottom: .45rem; }
+  .view-title { font-size: clamp(1.3rem, 2.2vw, 1.75rem); margin: .1rem 0 .15rem; }
+  .view-lede { font-size: .9rem; }
+
+  /* 图区高度决定整屏高度，按视口高度封顶最有效。
+     三个类都挂在同一个 .orbit-map 上，顺序不能反：先通用、再首页、最后学习图。 */
+  .orbit-map { max-width: min(520px, 54vh); }
+  .hero-solar { max-width: min(500px, 50vh); }
+  .solar-mini { max-width: min(100%, 56vh); }
+
+  .module { margin-top: .55rem; }
+  .module-head { margin-bottom: .35rem; }
+  .module-nav { margin: .2rem 0 .3rem; }
+  .band { padding: .45rem .85rem; margin-bottom: .45rem; }
+  .pane { padding: .7rem .85rem; }
+  .pane-title { margin-bottom: .35rem; }
+  .bullet-list { gap: .3rem; }
+  .figure-holder { padding: .9rem 0 1rem; }
+  .figure-caption { margin-top: .4rem; }
+  .speak-row { margin-top: .4rem; }
+  .step-footer { margin-top: .6rem; }
+
+  /* 练习页：任务指引移到左边一列。横向本来就有富余，纵向省掉一整段。 */
+  .tab-panel[data-tab-panel="drag"]:not([hidden]) {
+    display: grid;
+    grid-template-columns: minmax(190px, 250px) minmax(0, 1fr);
+    grid-template-areas:
+      "head  head"
+      "steps board"
+      "ctrl  board"
+      "fb    fb";
+    column-gap: 1.1rem; row-gap: .45rem; align-items: start;
+  }
+  .tab-panel[data-tab-panel="drag"] > .panel-head { grid-area: head; }
+  .tab-panel[data-tab-panel="drag"] > .instruction-list { grid-area: steps; margin-bottom: 0; }
+  .tab-panel[data-tab-panel="drag"] > .drag-board { grid-area: board; }
+  .tab-panel[data-tab-panel="drag"] > .practice-controls {
+    grid-area: ctrl; margin-top: 0;
+    flex-direction: column; align-items: stretch; gap: .4rem;
+  }
+  .tab-panel[data-tab-panel="drag"] > .practice-controls .btn { justify-content: center; }
+  .tab-panel[data-tab-panel="drag"] > .feedback,
+  .tab-panel[data-tab-panel="drag"] > .hint-line { grid-area: fb; margin-top: 0; }
+
+  .panel { padding: clamp(.75rem, 1.6vw, 1rem); margin-top: .6rem; }
+  .panel-head { margin-bottom: .45rem; }
+  .instruction-list { margin-bottom: .5rem; gap: .2rem; }
+  .drag-board { padding: .75rem; }
+  .track-legend { margin: 0 0 .45rem; }
+  .track-note { margin: 0 0 .5rem; }
+  .orbit-track { padding-bottom: .8rem; }
+  /* 卡盘原来是 flex 换行：8 张卡在 700px 宽的图板上会散成 3 行，实测吃掉 174px。
+     改成按列数排的网格后，一行 7–8 张，高度直接掉一半。 */
+  .chip-tray {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    align-content: center; gap: .4rem;
+    min-height: 0; padding: .5rem;
+  }
+  .planet-chip { min-width: 0; justify-content: center; }
+  .practice-controls { margin-top: .55rem; }
+  .tab-row { margin-bottom: .7rem; }
+  .tab { padding: .5rem .85rem .55rem; }
+
+  /* 小测：宽屏排两列，5 题变成 3 行 */
+  #main-quiz { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  .q-item { padding: .65rem .8rem; }
+  .q-buddy { margin-bottom: .35rem; }
+  .q-buddy .guide-figure { width: 34px; height: 34px; }
+  .q-text { margin-bottom: .35rem; }
+  .q-options { gap: .25rem; }
+  .score-line-big { margin-bottom: .5rem; }
+
+  /* 总结页：卡片收窄，9 张仍两行但每张更矮 */
+  .summary-grid { grid-template-columns: repeat(auto-fit, minmax(154px, 1fr)); gap: .45rem; }
+  .summary-card { padding: .4rem .55rem; }
+  .summary-card svg { width: 40px; height: 40px; }
+  .summary-lede-row { margin-bottom: .55rem; gap: .6rem; }
+  .checklist { padding: .6rem .75rem; gap: .28rem; }
+  .checklist li { font-size: .86rem; }
+  .transfer-box { margin-top: .5rem; }
+  .lede-inline { margin-bottom: .5rem; }
+  .text-area { min-height: 2.8rem; padding: .45rem .6rem; }
+  .practice-controls .score-line { margin: 0; }
+  .step-footer { margin-top: .45rem; }
+  .tab-row { margin-bottom: .55rem; }
+
+  /* 预习页 */
+  .term-grid { gap: .6rem; }
+  .term-card { padding: .75rem .85rem; gap: .3rem; }
+  .term-card svg { width: 46px; height: 46px; }
+  .term-name { font-size: 1rem; }
+  .term-def { font-size: .86rem; }
+
+  .site-footer { margin-top: 1rem; padding: 1rem 1rem 1.2rem; }
+}
+
+/* (b) 更矮的屏（1366×768 与 1280×720 投影）：再收一轮，优先收图、卡与留白。
+   这一档把 .view-lede（展开的那句说明）让给内容 —— 同一句话在 900px 高的屏上留着。 */
+@media (min-width: 1001px) and (max-height: 800px) {
+  .orbit-map { max-width: min(460px, 46vh); }
+  .hero-solar { max-width: min(430px, 44vh); }
+  .solar-mini { max-width: min(100%, 50vh); }
+  .view-title { font-size: clamp(1.2rem, 2vw, 1.5rem); }
+  .view-lede { display: none; }
+  .pane { padding: .6rem .75rem; }
+  .band { padding: .38rem .8rem; margin-bottom: .38rem; }
+  .panel { padding: .6rem .7rem; margin-top: .45rem; }
+  .instruction-list li { font-size: .84rem; }
+  .chip-tray { gap: .32rem; padding: .42rem; }
+  .planet-chip { padding: .16rem .45rem .16rem .18rem; }
+  .instruction-list li { font-size: .8rem; }
+  .drag-board { padding: .6rem; }
+  .view { padding-bottom: .45rem; }
+  .summary-card { padding: .3rem .45rem; }
+  .summary-card svg { width: 30px; height: 30px; }
+  .summary-lede-row { margin-bottom: .4rem; }
+  .panel { padding: .5rem .6rem; }
+  .panel-head { margin-bottom: .3rem; }
+  /* 页脚是署名行，不是学习内容：在矮屏上压到最薄，
+     这样「header + 内容 + 页脚」才装得进一屏，整页不会出现滚动条。 */
+  .site-footer { margin-top: .2rem; padding: .3rem 1rem .4rem; }
+  .site-footer p { font-size: .72rem; }
+  .orbit-track { padding-bottom: .55rem; }
+  .track-legend { margin: 0 0 .3rem; }
+  .track-note { margin: 0 0 .35rem; font-size: .72rem; }
+  .step-footer { margin-top: .35rem; }
+  .tab-row { margin-bottom: .45rem; }
+  .summary-grid { grid-template-columns: repeat(auto-fit, minmax(144px, 1fr)); gap: .4rem; }
+  .summary-card { padding: .35rem .5rem; }
+  .summary-card svg { width: 34px; height: 34px; }
+  .summary-card p { font-size: .72rem; }
+  .checklist { padding: .5rem .65rem; gap: .22rem; }
+  .checklist li { font-size: .82rem; }
+  .text-area { min-height: 2.4rem; padding: .35rem .5rem; }
+  .view { padding-bottom: .35rem; }
+  .step-footer { margin-top: .15rem; }
+  .view { padding-bottom: .05rem; }
+  .summary-card svg { width: 30px; height: 30px; }
+  .summary-card p { font-size: .7rem; }
+  .view { padding-bottom: .2rem; }
+  .tab-row { margin-bottom: .3rem; }
+  .summary-lede-row { margin-bottom: .3rem; }
+  .site-footer { margin-top: 0; padding: .25rem 1rem .35rem; }
+}
+
+/* (c) 手机：吸顶条压薄 + 各页再收一轮。
+   430px 宽装不下「4 张术语卡 + 2 道题」或「9 张总结卡 + 自评清单 + 迁移框」这样的整页内容，
+   所以手机上仍会有一次很短的滑动；这里能做的，是把每一页都压到接近一屏。 */
+@media (max-width: 640px) {
+  /* 吸顶 header 每省 1px，每一页就多 1px 可视高度 */
+  .site-header { padding: .3rem .7rem .34rem; gap: .26rem; }
+  .brand-mark { width: 24px; height: 24px; }
+  .brand-sun { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; }
+  .brand-title { font-size: .92rem; }
+  .header-top { row-gap: .3rem; }
+  .main-nav { padding: .12rem .2rem; }
+  .nav-btn { padding: .1rem .2rem; }
+  .step-badge { width: 21px; height: 21px; font-size: .62rem; }
+  .ctl { padding: .32rem .5rem; font-size: .74rem; }
+
+  .view { padding-top: .45rem; padding-bottom: .7rem; }
+  .view-kicker { display: none; }
+  .view-head { margin-bottom: .5rem; }
+  .view-title { font-size: 1.25rem; margin: .1rem 0 .1rem; }
+  .view-lede { font-size: .86rem; }
+
+  /* 首页：动画按视口高度封顶（它是首页最高的一块） */
+  .hero { gap: .9rem; }
+  .hero-title { font-size: 1.6rem; margin-bottom: .45rem; }
+  .hero-actions { margin: .6rem 0 .6rem; gap: .4rem; }
+  .hero-actions .btn { padding: .5rem .8rem; font-size: .86rem; }
+  .hero-solar { max-width: min(400px, 38vh); }
+  .solar-caption { font-size: .76rem; margin-top: .35rem; }
+  .solar-note { font-size: .72rem; margin-top: .25rem; }
+  .planet-jump { gap: .28rem; }
+  .jump-chip { padding: .13rem .5rem .13rem .16rem; gap: .25rem; font-size: .74rem; }
+  .jump-chip svg { width: 20px; height: 20px; }
+
+  /* 学习模块 */
+  .orbit-map { max-width: min(390px, 38vh); }
+  .module-nav { margin: .15rem 0 .25rem; gap: .25rem; }
+  .mod-chip { padding: .26rem .58rem; font-size: .78rem; }
+  .band { padding: .45rem .7rem; margin-bottom: .4rem; }
+  .band-tag { font-size: 11px; }
+  .band .guide-figure { width: 32px; height: 32px; }
+  .pane { padding: .6rem .7rem; }
+  .pane-title { margin-bottom: .28rem; }
+  .bullet-list { gap: .25rem; }
+  .bullet-list li { font-size: .9rem; }
+  .figure-caption { margin-top: .4rem; font-size: .74rem; }
+  .fact { padding: .38rem .55rem; }
+  .fact b { font-size: 1.1rem; }
+  .fact span { font-size: .72rem; }
+  .step-footer { gap: .4rem; margin-top: .55rem; }
+  .step-footer .btn { padding: .44rem .68rem; font-size: .82rem; }
+  .step-footer .btn-home { margin-right: 0; }
+
+  /* 预习 / 练习 / 总结 */
+  .term-card { padding: .6rem .65rem; }
+  .term-card svg { width: 34px; height: 34px; }
+  .term-name { font-size: .95rem; }
+  .term-def { font-size: .82rem; }
+  .panel { padding: .7rem .75rem; margin-top: .55rem; }
+  /* 预习的两道小题并排，省掉一整段高度 */
+  #pretrain-quiz { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; }
+  .q-item { padding: .55rem .65rem; }
+  .q-buddy { margin-bottom: .3rem; }
+  .q-buddy .guide-figure { width: 30px; height: 30px; }
+  .q-text { margin-bottom: .35rem; }
+  .reason-chip { padding: .3rem .7rem; font-size: .84rem; }
+  .checklist { padding: .65rem .75rem; gap: .35rem; }
+  .checklist li { font-size: .86rem; }
+  .summary-grid { gap: .45rem; }
+  .summary-card { padding: .45rem .5rem; }
+  .summary-card svg { width: 40px; height: 40px; }
+  .summary-card p { font-size: .74rem; }
+  .transfer-box { margin-top: .55rem; }
+  .site-footer { margin-top: .8rem; padding: 1rem .8rem 1.2rem; }
+
+  /* 手机上让模块条、练习标签、自评清单各只占一行/两行，别再多占 */
+  .mod-chip { padding: .2rem .42rem; gap: .3rem; font-size: .72rem; }
+  .mod-chip .mod-num { width: 16px; height: 16px; font-size: .62rem; border-radius: 5px; }
+  .tab { padding: .45rem .55rem .5rem; font-size: .8rem; }
+  .tab .ico { display: none; }          /* 三个活动标签挤进一行；图标在文字里已有含义 */
+  .checklist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .3rem .5rem; }
+  .summary-card { padding: .38rem .42rem; }
+  .summary-card svg { width: 32px; height: 32px; }
+  .term-card { gap: .25rem; }
+  .site-footer { margin-top: .5rem; padding: .55rem .8rem .65rem; }
+  .site-footer p { font-size: .74rem; }
+}
+
+/* (d) 页脚贴底 + 首页把一屏高度用满。
+   首页的信息只有「动画 ＋ 向导 ＋ 两个按钮」。删掉重复的星球按钮与压缩说明之后，
+   剩下的高度如果不管，就会全堆在页面下半部形成一大片空白。
+
+   做法：body 与 #app 变成一列，可见的那一页吃掉剩余高度，页脚因此贴在视口底部，
+   不需要任何"视口 − header 高度"的魔法数字（那种写法只要页脚高度一变就会溢出）。
+   body 的 ::before / ::after 是 position:fixed，#live 是 absolute，都不参与这层布局。 */
+body { display: flex; flex-direction: column; min-height: 100vh; }
+body { min-height: 100dvh; }
+#app { flex: 1 1 auto; display: flex; flex-direction: column; }
+/* flex 项目的 width:auto 会收缩到 fit-content，页面就不再是"撑满 max-width"的块级宽度
+   （实测预习页只剩 1017px、总结页只剩 834px）。补 width:100% 让 max-width 重新生效。 */
+#app > .view { width: 100%; }
+
+/* 首页：动画放大，内容在剩余高度里竖直居中。
+   用 ID 前缀提高优先级，避免和 §17 各档的尺寸互相打架。
+   注意：点行星会暂停动画，见 script.js 的 solarSys.held。 */
+@media (min-width: 1001px) {
+  #view-home:not([hidden]) {
+    flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center;
+  }
+  #view-home .hero { width: 100%; grid-template-columns: minmax(0, 1.32fr) minmax(0, 1fr); }
+  #view-home .hero-solar { max-width: min(700px, 78vh); }
+}
+
+/* ---------- 17.4 关于页（自我介绍 + 理论应用） ---------- */
+.ctl-about { border-color: rgba(255, 194, 75, .5); }
+.ctl-about[aria-pressed="true"], .ctl-about.is-current { background: var(--gold); color: var(--ink); border-color: transparent; }
+
+/* 作品概览里每一项：类型标签 + 说明 + 一个按钮 */
+/* 「这份作品包含什么」那张资产清单已按用户要求删除，自我介绍改成整幅宽 */
+.about-grid { display: block; }
+.about-grid .bio-card { max-width: 100%; }
+/* 整幅宽之后，正文一行会太长：给自我介绍和四条事实各压一个行宽上限 */
+.bio-lead { max-width: 78ch; }
+.bio-facts { max-width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .3rem .9rem; }
+@media (max-width: 1000px) { .bio-facts { grid-template-columns: 1fr; } }
+
+.bio-head { display: flex; align-items: center; gap: .8rem; margin-bottom: .7rem; }
+.bio-avatar {
+  flex: none; width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 1.05rem; font-weight: 700; letter-spacing: .02em;
+  color: var(--ink); background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 10px 24px -12px rgba(255, 178, 46, .8);
+}
+.bio-name { font-size: 1.2rem; font-weight: 650; }
+.bio-text { color: var(--text-2); font-size: .95rem; margin-bottom: .6rem; }
+/* 自我介绍是本页主角：比正文略大、行距松一点，原文一字不改 */
+.bio-lead { font-size: 1.02rem; line-height: 1.7; color: var(--text); }
+.bio-text b { color: var(--text); }
+.bio-facts { list-style: none; display: flex; flex-direction: column; gap: .3rem; margin-top: .3rem; }
+.bio-facts li { position: relative; padding-left: 1.1rem; font-size: .9rem; color: var(--text-2); }
+.bio-facts li::before { content: ""; position: absolute; left: 0; top: .58em; width: 7px; height: 1px; background: var(--gold); }
+
+/* 下面两组是已删除的「作品清单」用的样式，留着以便需要时把那一块挂回来 */
+.asset-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+.asset-list li {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: .55rem; align-items: center;
+  background: var(--glass-2); border: 1px solid var(--line);
+  border-radius: var(--r-s); padding: .5rem .65rem;
+  font-size: .88rem; color: var(--text-2);
+}
+.asset-type {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--cyan); background: rgba(127, 216, 255, .12);
+  border: 1px solid rgba(127, 216, 255, .3); border-radius: 5px;
+  padding: .1rem .35rem; text-align: center;
+}
+.btn-mini { padding: .34rem .6rem; font-size: .8rem; border-radius: 9px; }
+
+.about-section-title { font-size: 1.25rem; margin: 1.4rem 0 .3rem; }
+.about-section-lede { color: var(--text-3); font-size: .9rem; max-width: 82ch; margin-bottom: .9rem; }
+
+/* 每条理论：左文右图 */
+.theory-list { display: flex; flex-direction: column; gap: .8rem; }
+.theory-card {
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: .9rem;
+  background: linear-gradient(180deg, var(--glass-2), var(--glass-1));
+  border: 1px solid var(--line); border-radius: var(--r-card);
+  padding: .95rem 1.05rem;
+  box-shadow: var(--shadow-card);
+}
+@media (max-width: 1000px) { .theory-card { grid-template-columns: 1fr; } }
+.theory-num {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--gold);
+}
+.theory-title { font-size: 1.08rem; margin: .2rem 0 .45rem; }
+.theory-text { font-size: .9rem; color: var(--text-2); }
+.theory-how { font-size: .9rem; color: var(--text-2); margin-top: .45rem; }
+.theory-how b, .theory-evidence b { color: var(--gold); font-weight: 650; }
+.theory-evidence {
+  font-size: .86rem; color: var(--text-2); margin-top: .45rem;
+  background: rgba(111, 227, 176, .07); border-left: 2px solid var(--mint);
+  border-radius: 0 8px 8px 0; padding: .45rem .6rem;
+}
+.theory-evidence b { color: var(--mint); }
+.theory-shot { margin: 0; display: flex; flex-direction: column; gap: .35rem; }
+.theory-shot img {
+  width: 100%; height: auto; display: block;
+  border: 1px solid var(--line-2); border-radius: var(--r-s);
+  background: #0b1230;
+  /* 手机截图是竖长图（1000×2093），不设上限会把这一页拉到 5 屏 */
+  max-height: 300px; object-fit: contain;
+  transition: transform var(--t), border-color var(--t);
+}
+.theory-shot a:hover img { transform: translateY(-2px); border-color: var(--gold); }
+.theory-shot figcaption { font-size: .78rem; color: var(--text-3); }
+.theory-actions { grid-column: 1 / -1; display: flex; gap: .5rem; }
+
+/* ---------- 17.5 图案尺寸：图案不跟正文尺寸走 ----------
+   前一版为了"每页一屏看完"，在几个高度档位里把插图压到 30–60px。
+   这一版按用户要求把图案放大：图案比正文大、不需要限制在文字框里。
+   本段必须放在所有响应式媒体查询之后，才能覆盖各档位的限制。 */
+.term-card svg { width: 96px; height: 96px; }
+.summary-card svg { width: 84px; height: 84px; }
+.planet-figure svg { max-width: none; }
+.planet-card .planet-figure svg { max-width: none; height: auto; }
+.planet-jump .jump-chip svg, .jump-chip svg { flex: none; }
+
+@media (max-width: 1000px) {
+  .term-card svg { width: 80px; height: 80px; }
+  .summary-card svg { width: 72px; height: 72px; }
+  /* 窄屏上动画里的行星原本被 vh 压得太小（水星只有 5px），这里放宽 */
+  #view-home .hero-solar { max-width: min(100%, 62vh); }   /* 100% = 父容器宽度，绝不会顶出屏幕 */
+}
+
+@media (max-width: 640px) {
+  .term-card svg { width: 68px; height: 68px; }
+  .summary-card svg { width: 60px; height: 60px; }
+  #view-home .hero-solar { max-width: min(100%, 56vh); }
+}
+
+/* ---------- 17.9 宽屏：把左右两边的空白用起来 ----------
+   .view 原来固定 1200px 宽，在 1920 的屏上左右各空 360px。
+   放宽到「视口 92%、最多 1680px」之后，各页内部的 fr 网格会自己把多出来的宽度分掉：
+   学习页的图更大、练习页的轨道摊得更开、总结页 9 张卡排成一行、预习页两道小题挪到术语卡右边。
+   同时给纯文字块加行宽上限 —— 宽度让给图和卡片，正文不要被拉成一条长线。
+   本段放在最后，才能覆盖上面各高度档位里的尺寸。 */
+@media (min-width: 1400px) {
+  :root { --max: min(1680px, 92vw); }
+
+  /* 图区上限跟着放宽，否则卡片里会空出一圈 */
+  .orbit-map { max-width: min(620px, 52vh); }
+  /* 首页：动画吃更多宽度，并在高度允许时尽量大 */
+  #view-home .hero { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); }
+  #view-home .hero-solar { max-width: min(920px, 80vh); }
+  /* 学习模块里的轨道图 */
+  .solar-mini { max-width: min(100%, 64vh); }
+
+  /* 预习页：术语卡与两道小题并排，用掉右侧宽度，顺带把整页压矮一截 */
+  #view-pretrain:not([hidden]) {
+    display: grid; align-items: start;
+    grid-template-columns: minmax(0, 1.42fr) minmax(0, 1fr);
+    grid-template-areas: "head head" "terms quiz" "foot foot";
+    column-gap: 1rem; row-gap: .8rem;
+  }
+  #view-pretrain > .view-head { grid-area: head; }
+  #view-pretrain > .term-grid { grid-area: terms; }
+  #view-pretrain > .panel { grid-area: quiz; margin-top: 0; }
+  #view-pretrain > .step-footer { grid-area: foot; }
+
+  /* 行宽上限：一行多少字不跟着屏幕一起变长 */
+  .bullet-list li { max-width: 48ch; }
+  .bubble { max-width: 62ch; }
+  .term-def { max-width: 46ch; }
+}
+
+/* 拖拽页在 720–768px 高的屏上再挤一点：图板本身是整屏里最高的一块，
+   留白先从这里让（图形尺寸是教学信息，不动）。 */
+@media (min-width: 1001px) and (max-height: 800px) {
+  .drag-board { padding: .5rem; }
+  .orbit-track { padding-bottom: .35rem; }
+  .track-legend { margin: 0 0 .2rem; }
+  .track-note { margin: 0 0 .2rem; }
+  .chip-tray { padding: .32rem; gap: .26rem; }
+}
+
+/* ---------- 17.6 首页：动图更大、地小球更小、贴住动画左下角 ----------
+   ① 动图放大：两栏比例 1.72:1，高度上限放宽到 1000px / 92vh
+      （矮屏仍受 vh 限制，否则整页装不下一屏）。
+   ② 地小球缩小：64px（手机 54px），小喇叭角标 22px。
+   ③ 位置：绝对定位贴在动画框的左下角，肉眼一看就是"站在动画里"，
+      不再和右侧文字栏有任何关系；≤1000px 时改回跟随文档流（避免压住小屏上的行星）。 */
+@media (min-width: 1001px) {
+  #view-home .hero { grid-template-columns: minmax(0, 2.2fr) minmax(280px, 1fr); gap: .9rem; }
+  #view-home .hero-solar { max-width: min(1200px, 96vh); }
+}
+/* 文字块左移一点：动图框比实际画面宽（椭圆轨道只用到框宽的约 88%），
+   所以把标题与按钮往回拉 2.75rem（≈44px），只是用掉动图右侧的空白，
+   不会碰到行星；≤1000px 时首页变成单栏，这一段自动失效。 */
+@media (min-width: 1001px) { #view-home .hero-copy { margin-left: -2.75rem; } }
+
+@media (max-width: 1000px) { #view-home .hero-solar { max-width: min(100%, 78vh); } }
+@media (max-width: 640px) { #view-home .hero-solar { max-width: min(100%, 68vh); } }
+
+/* 动画自己一层定位容器：向导钉在这层的左下角（也就是动画的左下角），
+   说明文字留在这层之外，所以两者不会再叠在一起。 */
+.hero-stage {
+  position: relative;
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* 向导放在动画"正下方"而不是压在动画上：
+   之前钉在动画左下角时，对话框会盖住行星（用户反馈）。
+   现在紧贴动画下沿（负 margin 抵消留白），对齐到左边，不遮挡任何行星。 */
+.guide-hero {
+  position: static;
+  align-self: flex-start;
+  /* 说明文字上移到动图正下方之后，向导整体再往下一点（用户要求），
+     留出 .45rem 让它与说明文字明确分开、不重合。 */
+  margin: .9rem 0 0;   /* 用户要求：地小球再往下一点，与上面那行说明文字分开 */
+  gap: .55rem; align-items: flex-end;
+}
+.guide-btn {
+  position: relative; flex: none; padding: 0; border: 0; background: none;
+  cursor: pointer; border-radius: 50%;
+  display: inline-flex; align-items: flex-end;   /* 让内部 span 成为 flex 项，width 才生效 */
+  transition: transform .18s var(--ease);
+}
+.guide-btn:hover, .guide-btn:focus-visible { transform: translateY(-2px) scale(1.05); }
+.guide-btn .guide-figure { display: block; width: 64px; height: 64px; flex: none; }
+.guide-play {
+  position: absolute; right: -1px; bottom: -1px;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  color: var(--ink);
+  box-shadow: 0 6px 14px -8px rgba(255, 178, 46, .95);
+}
+.guide-say { display: flex; flex-direction: column; gap: .25rem; }
+.guide-hint { font-size: .82rem; font-weight: 600; color: var(--gold); }
+
+@media (max-width: 1000px) {
+  /* 小屏：不再浮在动画上，回到动画下方，避免遮挡行星 */
+  .guide-hero { position: static; margin: .1rem 0 0; align-items: center; align-self: center; }
+  .guide-btn .guide-figure { display: block; width: 58px; height: 58px; flex: none; }
+  .guide-hint { font-size: .78rem; }
+}
+@media (max-width: 640px) {
+  .guide-btn .guide-figure { display: block; width: 54px; height: 54px; flex: none; }
+  .guide-play { width: 20px; height: 20px; }
+}
+
+
+/* ---------- 17.7 预习页：桌面端固定两行（覆盖 ≥1400px 的左右分栏） ----------
+   用户要求：第一行 = 4 张术语卡，第二行 = 2 道题。
+   之前 §"最宽档" 在 ≥1400px 把这两块并排（grid-template-areas: "terms quiz"），
+   结果 1440px 下卡片只剩 176px 宽、文字挤成一条。这里改回单栏堆叠，
+   并把卡片固定成 4 等分、题目固定成 2 等分。本段放在最后，才能覆盖它。 */
+@media (min-width: 1001px) {
+  #view-pretrain:not([hidden]) {
+    display: block;                     /* 取消两栏网格，恢复自上而下 */
+  }
+  #view-pretrain > .view-head,
+  #view-pretrain > .term-grid,
+  #view-pretrain > .panel,
+  #view-pretrain > .step-footer { grid-area: auto; }
+
+  #view-pretrain > .term-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .8rem;
+  }
+  #view-pretrain > .panel { margin-top: .9rem; }
+  #view-pretrain .quiz-block {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+  }
+  /* 卡片宽了，图也跟着大一点，别留一圈空白 */
+  #view-pretrain .term-card svg { width: 104px; height: 104px; }
+}
+
+
+/* ---------- 17.8 合并页：太阳与八大行星（横排图是本页主视觉） ---------- */
+.lineup-wrap {
+  background: radial-gradient(120% 90% at 12% 50%, rgba(255, 194, 75, .10), transparent 60%),
+              linear-gradient(180deg, #0b1230, #070c1d);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  padding: 1rem .8rem .2rem;
+  box-shadow: var(--shadow-lift);
+}
+.solar-lineup { max-width: 100%; }
+.lineup-svg { overflow: visible; }
+.lineup-label { fill: var(--text-2); font-family: inherit; letter-spacing: .02em; }
+.lineup-hint {
+  margin: .55rem auto 0; max-width: 70ch; text-align: center;
+  font-size: .84rem; color: var(--text-3);
+}
+.lineup-groups {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .6rem; margin: .8rem 0;
+}
+@media (max-width: 1000px) { .lineup-groups { grid-template-columns: 1fr; } }
+.group-chip {
+  background: var(--glass-1); border: 1px solid var(--line);
+  border-radius: var(--r-s); padding: .6rem .75rem;
+  display: flex; flex-direction: column; gap: .2rem;
+}
+.group-chip strong { font-size: .95rem; }
+.group-chip span { font-size: .84rem; color: var(--text-2); }
+/* 资料卡里的“更多”展开块 */
+.pop-more {
+  margin-top: .5rem; padding-top: .5rem;
+  border-top: 1px solid var(--line);
+  font-size: .84rem; color: var(--text-2);
+  display: flex; flex-direction: column; gap: .25rem;
+}
+.pop-more[hidden] { display: none; }
+
+/* 横排图里的星球是嵌套的 <svg>，会被 .orbit-map svg{width:100%} 拉成整幅图那么宽——
+   这条把它还原成自己的尺寸（可见球体直径 × 200/120），才和拖拽芯片里的长得一样。 */
+.solar-lineup .solar-body svg { width: auto; height: auto; display: block; }
+
+/* 横排全家福的资料卡：整行星球的**上方**一条横幅，再用细箭头指下来。
+   这样点开任何一颗都不会盖住旁边的星球 [用户要求：卡片放在整行上方/下方]。
+   host 顶部由 script.js 的 solarReservePop() 预留出卡片那么高的一条空白，
+   行星被顺势推下来，卡片和行星之间就是那条虚线箭头。 */
+.solar-lineup .planet-pop {
+  width: min(420px, calc(100% - 24px));
+  animation: lineup-pop-in .18s ease-out;
+}
+/* 卡片原来贴在行星旁边，靠右下角那个小三角指向行星；现在卡片在整行上方，
+   由虚线箭头负责指认，这个小三角就多余了。 */
+.solar-lineup .planet-pop::after { display: none; }
+@keyframes lineup-pop-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .solar-lineup .planet-pop { animation: none; }
+}
+
+/* 资料卡的细箭头：从卡片指向被点的星球，指明"这条介绍属于哪一颗"。
+   只在点击后出现（solarOpen 打开卡片时显示，关闭时隐藏），所以不会挡着看星球。 */
+.pop-leader {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 5; overflow: visible;
+}
+.pop-leader[hidden] { display: none; }
+.pop-leader line { stroke: var(--gold); stroke-width: 1.2; stroke-dasharray: 4 4; opacity: .85; }
+.pop-leader circle { fill: var(--gold); }
+/* 卡片收窄一点，尽量少盖住旁边的星球 */
+.planet-pop { width: 248px; }
+.planet-pop .pop-core {
+  font-size: .9rem; color: var(--text); font-weight: 550;
+  background: rgba(255, 194, 75, .10);
+  border-left: 2px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+  padding: .4rem .55rem; margin: .15rem 0 .5rem;
+}
+
+/* 理想带：宽屏上锁成一行（用户要求"不要折行"），并给小结带配色 */
+@media (min-width: 1200px) {
+  #view-learn .band-ideal .bubble { white-space: nowrap; }
+}
+.band-takeaway {
+  background: linear-gradient(180deg, rgba(127, 216, 255, .09), rgba(127, 216, 255, .025));
+  border-color: rgba(127, 216, 255, .24);
+}
+.band-takeaway .band-tag { color: var(--cyan); }
+.takeaway-list { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem .9rem; }
+@media (max-width: 1000px) { .takeaway-list { grid-template-columns: 1fr; } }
+.takeaway-list li {
+  position: relative; padding-left: 1rem; font-size: .9rem; color: var(--text-2);
+}
+.takeaway-list li::before {
+  content: ""; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--cyan); box-shadow: 0 0 8px rgba(127, 216, 255, .8);
+}
+.takeaway-list b { color: #fff; font-weight: 650; }
+
+/* 首页卡片的"见面语"：轻一点，不用金色核心知识块 */
+.pop-meet { font-size: .88rem; color: var(--text-2); margin: .1rem 0 .45rem; }
+
+/* ---------- 17.9 复习页那一排天体（用户要求：排成一行 + 大小按比例） ----------
+   写在所有密度档位之后：宽屏时"九颗排成一行"要压过前面按视口高度写的
+   auto-fit 档位（那些档位会把卡片折成两三行）。太阳那一格给宽一点，
+   它才放得下比木星更大的身体 [真实比例：太阳是地球的 109 倍，整排都压缩过]。 */
+.summary-grid { grid-template-columns: 1.5fr repeat(8, minmax(0, 1fr)); gap: .5rem; }
+.summary-card {
+  flex-direction: column; align-items: center; text-align: center;
+  justify-content: center;      /* 球心排在同一条线上：九颗大小不同，靠"整体居中"对齐 */
+  gap: .25rem; padding: .5rem .35rem;
+}
+.summary-card .summary-text { align-items: center; }
+/* 尺寸由 planetSVG 的 width/height 决定（比例在这一行里是真的），
+   前面的档位会把 svg 统一压成 62/40px，那会把比例抹平，所以这里还原成自动。 */
+.summary-card svg { width: auto; height: auto; max-width: 100%; }
+/* 自评清单和迁移小挑战各占一行（用户要求分行写），所以这里是纵向排列 */
+.summary-bottom { display: block; margin-top: .6rem; }
+.summary-bottom .checklist-box { margin-top: 0; }
+.summary-bottom .transfer-box { margin-top: .5rem; padding: .7rem .95rem .8rem; }
+/* 两块叠起来会顶高这一页，标题与地小球那两行留白收一点，把高度还回去 */
+#view-summary .view-head { margin-bottom: .7rem; }
+#view-summary .summary-lede-row { margin-bottom: .65rem; }
+#view-summary { padding-bottom: 1.4rem; }
+/* 窄屏放不下九颗一行：回到会折行的网格（比例关系不变） */
+@media (max-width: 1240px) {
+  .summary-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .55rem; }
+  .summary-card { flex-direction: row; align-items: center; text-align: left; gap: .55rem; padding: .6rem .7rem; }
+  .summary-card .summary-text { align-items: flex-start; }
+}
+
+/* ---------- 18. Print (teacher handout) ---------- */
+@media print {
+  body { background: #fff; color: #14224a; font-size: 11.5pt; }
+  body::before, body::after { display: none; }
+  .site-header, .main-nav, .tab-row, .practice-controls, .step-footer, .site-footer,
+  .progress-track, .module-nav, .reason-chips { display: none !important; }
+  .view[hidden] { display: block !important; }
+  .view-title, .hero-title, .pane, .panel, .term-card, .summary-card, .checklist, .band, .fact, .q-item {
+    background: #fff !important; color: #14224a !important;
+    border-color: #cbd9f7 !important; box-shadow: none !important;
+    -webkit-text-fill-color: currentColor !important;
+  }
+  .pane-figure, .drag-board { background: #f2f7ff !important; }
+  .bullet-list li, .term-def, .summary-card p, .fact span { color: #40507a !important; }
+  .view-title, .hero-title { color: #14224a !important; }
+}

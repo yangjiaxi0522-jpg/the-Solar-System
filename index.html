@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<!--
+  探索太阳系 · Explore the Solar System
+  TDLL6329 交互式学习网站原型 / interactive learning website prototype
+
+  HOW TO READ THIS FILE
+  ------------------------------------------------------------------
+  Every key design decision carries an inline comment such as
+      [L1-Visual]  [L2-Given/New]  [L3-Coherence]
+  These map the element to Lesson 1 (multimodality), Lesson 2 (MDA:
+  Halliday's metafunctions + Kress & van Leeuwen visual grammar) and
+  Lesson 3 (Mayer's CTML).
+  A full mapping table lives in 设计说明-Design-Notes.md.
+  The same tags also appear on screen when you press “理论标注 / Theory tags”.
+  ------------------------------------------------------------------
+  Bilingual strategy: every visible string exists twice in the DOM
+  (span.lang-zh / span.lang-en). The language button only flips a class on
+  <body>, so switching language never re-loads or re-renders the page.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- 默认语言 = 英文（English first）。中文版通过右上角语言按钮或 ?lang=zh 进入。 -->
+<title>Explore the Solar System · 探索太阳系</title>
+<meta name="description" content="Bilingual interactive Solar System learning site for ages 8–10 / 面向 8–10 岁小学生的双语交互式太阳系学习网站" />
+<!-- 站点图标内联成 data URI：单一文件版也能用，不产生额外请求（也就不会有 favicon 404） -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230a1129'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%237fd8ff' stroke-opacity='.5' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23ffc24b'/%3E%3Ccircle cx='53' cy='32' r='4' fill='%2358b6ee'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="lang-en">
+<a class="skip-link" href="#app">跳到主要内容 / Skip to content</a>
+
+<!-- ============ 顶部控制条 / header controls ============
+     [L3-Modality] + [L3-Redundancy] 声音是“主模态选择器”：
+     学习者可以决定用听还是用读，避免文字和旁白硬性同时出现。
+     [L3-Boundary] “暂停动画”给儿童控制权，动画不是强制播放的背景装饰。 -->
+<header class="site-header">
+  <!-- 第一行：品牌 + 设置 / brand + settings -->
+  <div class="header-top">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <span class="brand-orbit"></span>
+      <span class="brand-sun"></span>
+    </span>
+    <div class="brand-text">
+      <h1 class="brand-title">
+        <span class="lang-zh">探索太阳系</span><span class="lang-en">Explore the Solar System</span>
+      </h1>
+      <p class="brand-sub">
+        <span class="lang-zh">8–10 岁 · 课堂互动学习 · 地小球向导陪你玩</span>
+        <span class="lang-en">Ages 8–10 · Classroom interactive learning · with Earthie the Guide</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="header-controls" role="group" aria-label="设置 / Controls">
+    <button id="btn-lang" class="ctl ctl-strong" type="button" title="Switch language · 切换语言">
+      <span class="ico" aria-hidden="true" data-icon="globe"></span> <span class="lang-zh">English</span><span class="lang-en">中文</span>
+    </button>
+    <button id="btn-sound" class="ctl" type="button" aria-pressed="true" title="Sound on / off · 声音开关" aria-label="Sound on or off / 声音开关">
+      <span class="ico" aria-hidden="true" data-icon="speaker"></span> <span class="lang-zh">声音：开</span><span class="lang-en">Sound: on</span>
+    </button>
+    <button id="btn-motion" class="ctl" type="button" aria-pressed="false" title="Pause or play the orbit animation · 暂停或播放动画" aria-label="Pause or play the orbit animation / 动画暂停或播放">
+      <span class="ico" aria-hidden="true" data-icon="pause"></span> <span class="lang-zh">动画：播放中</span><span class="lang-en">Motion: playing</span>
+    </button>
+    <button id="btn-theory" class="ctl" type="button" aria-pressed="false" title="Show theory tags · 显示理论标注" aria-label="Show or hide theory tags / 显示或隐藏理论标注">
+      <span class="ico" aria-hidden="true" data-icon="tag"></span> <span class="lang-zh">理论标注</span><span class="lang-en">Theory tags</span>
+    </button>
+    <button id="btn-jump" class="ctl ctl-jump" type="button" aria-expanded="false" aria-controls="jump-menu">
+      <span class="ico" aria-hidden="true" data-icon="arrowRight"></span>
+      <span class="lang-zh">跳到</span><span class="lang-en">Go to</span>
+    </button>
+    <!-- 作品集页面（自我介绍 + 理论应用）：不属于 1–5 学习路径，单独放在这里 -->
+    <button id="btn-about" class="ctl ctl-strong ctl-about" type="button" data-goto="about">
+      <span class="ico" aria-hidden="true" data-icon="brain"></span>
+      <span class="lang-zh">关于 &amp; 理论</span><span class="lang-en">About &amp; Theory</span>
+    </button>
+  </div>
+  </div>
+
+  <!-- ============ 学习路径 / learning path ============
+       [L1-Nonlinear] 既有顺序（1→2→3→4→5 的数字与箭头），也可以任意跳：
+       学生想先去动手练习，直接点第 4 站就行。
+       [L3-Progress] 每一站自带状态：已完成 ✓ / 正在学习 / 未开始。
+       状态由页面上真实发生过的动作决定（做过的事不会因为切语言或重做小测被抹掉）：
+         首页     = 离开首页、进入过别的环节
+         预习卡片 = 两道预习小题都答对（2/2）
+         分段学习 = 2 个模块都看过（2/2）
+         动手练习 = 拖拽 8/8 + 写过或看过参考想法 + 小测 5/5（3/3）
+         总结回顾 = 自评清单 4 项全勾（4/4）
+       [L3-Boundary] 导航固定常驻：无论学到哪一段，随时都能换站或回首页。
+       状态文字由 script.js 的 renderJourney() 填充（这里写出初始值，避免首屏跳动）。 -->
+  <nav class="main-nav" id="main-nav" aria-label="学习路径 / Learning path">
+    <ol class="journey">
+      <li class="journey-step">
+        <button class="nav-btn is-active" type="button" data-view="home" data-step="home" aria-current="page">
+          <span class="step-badge" aria-hidden="true">
+            <span class="step-num">1</span>
+            <span class="ico step-tick" data-icon="check"></span>
+          </span>
+          <span class="step-text">
+            <span class="step-label"><span class="lang-zh">首页</span><span class="lang-en">Home</span></span>
+            <span class="step-state"><span class="lang-zh">正在学习</span><span class="lang-en">Learning now</span></span>
+          </span>
+        </button>
+        <span class="step-link" aria-hidden="true"></span>
+      </li>
+      <li class="journey-step">
+        <button class="nav-btn" type="button" data-view="pretrain" data-step="pretrain">
+          <span class="step-badge" aria-hidden="true">
+            <span class="step-num">2</span>
+            <span class="ico step-tick" data-icon="check"></span>
+          </span>
+          <span class="step-text">
+            <span class="step-label"><span class="lang-zh">预习卡片</span><span class="lang-en">Pre-training</span></span>
+            <span class="step-state"><span class="lang-zh">未开始</span><span class="lang-en">Not yet</span></span>
+          </span>
+        </button>
+        <span class="step-link" aria-hidden="true"></span>
+      </li>
+      <li class="journey-step">
+        <button class="nav-btn" type="button" data-view="learn" data-step="learn">
+          <span class="step-badge" aria-hidden="true">
+            <span class="step-num">3</span>
+            <span class="ico step-tick" data-icon="check"></span>
+          </span>
+          <span class="step-text">
+            <span class="step-label"><span class="lang-zh">分段学习</span><span class="lang-en">Learn</span></span>
+            <span class="step-state"><span class="lang-zh">未开始</span><span class="lang-en">Not yet</span></span>
+          </span>
+        </button>
+        <span class="step-link" aria-hidden="true"></span>
+      </li>
+      <li class="journey-step">
+        <button class="nav-btn" type="button" data-view="practice" data-step="practice">
+          <span class="step-badge" aria-hidden="true">
+            <span class="step-num">4</span>
+            <span class="ico step-tick" data-icon="check"></span>
+          </span>
+          <span class="step-text">
+            <span class="step-label"><span class="lang-zh">动手练习</span><span class="lang-en">Practice</span></span>
+            <span class="step-state"><span class="lang-zh">未开始</span><span class="lang-en">Not yet</span></span>
+          </span>
+        </button>
+        <span class="step-link" aria-hidden="true"></span>
+      </li>
+      <li class="journey-step">
+        <button class="nav-btn" type="button" data-view="summary" data-step="summary">
+          <span class="step-badge" aria-hidden="true">
+            <span class="step-num">5</span>
+            <span class="ico step-tick" data-icon="check"></span>
+          </span>
+          <span class="step-text">
+            <span class="step-label"><span class="lang-zh">总结回顾</span><span class="lang-en">Summary</span></span>
+            <span class="step-state"><span class="lang-zh">未开始</span><span class="lang-en">Not yet</span></span>
+          </span>
+        </button>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- 窄屏版的“跳到”菜单：同样能去 5 个区 + 5 个学习模块 -->
+  <div class="jump-menu" id="jump-menu" hidden>
+    <!-- 窄屏没有横排路径条，这里用同一套数字 + 状态列出 5 站（状态由 renderJourney 填充） -->
+    <p class="jump-group micro"><span class="lang-zh">学习路径</span><span class="lang-en">Learning path</span></p>
+    <ol class="jump-steps">
+      <li>
+        <button class="jump-item" type="button" data-goto="home" data-step="home">
+          <span class="step-badge step-badge-sm" aria-hidden="true"><span class="step-num">1</span><span class="ico step-tick" data-icon="check"></span></span>
+          <span class="ico jump-ico" aria-hidden="true" data-icon="home"></span>
+          <span class="lang-zh">首页</span><span class="lang-en">Home</span>
+          <span class="step-state"><span class="lang-zh">正在学习</span><span class="lang-en">Learning now</span></span>
+        </button>
+      </li>
+      <li>
+        <button class="jump-item" type="button" data-goto="pretrain" data-step="pretrain">
+          <span class="step-badge step-badge-sm" aria-hidden="true"><span class="step-num">2</span><span class="ico step-tick" data-icon="check"></span></span>
+          <span class="ico jump-ico" aria-hidden="true" data-icon="brain"></span>
+          <span class="lang-zh">预习卡片</span><span class="lang-en">Pre-training</span>
+          <span class="step-state"><span class="lang-zh">未开始</span><span class="lang-en">Not yet</span></span>
+        </button>
+      </li>
+      <li>
+        <button class="jump-item" type="button" data-goto="learn" data-step="learn">
+          <span class="step-badge step-badge-sm" aria-hidden="true"><span class="step-num">3</span><span class="ico step-tick" data-icon="check"></span></span>
+          <span class="ico jump-ico" aria-hidden="true" data-icon="planet"></span>
+          <span class="lang-zh">分段学习</span><span class="lang-en">Learn</span>
+          <span class="step-state"><span class="lang-zh">未开始</span><span class="lang-en">Not yet</span></span>
+        </button>
+      </li>
+      <li>
+        <button class="jump-item" type="button" data-goto="practice" data-step="practice">
+          <span class="step-badge step-badge-sm" aria-hidden="true"><span class="step-num">4</span><span class="ico step-tick" data-icon="check"></span></span>
+          <span class="ico jump-ico" aria-hidden="true" data-icon="gamepad"></span>
+          <span class="lang-zh">动手练习</span><span class="lang-en">Practice</span>
+          <span class="step-state"><span class="lang-zh">未开始</span><span class="lang-en">Not yet</span></span>
+        </button>
+      </li>
+      <li>
+        <button class="jump-item" type="button" data-goto="summary" data-step="summary">
+          <span class="step-badge step-badge-sm" aria-hidden="true"><span class="step-num">5</span><span class="ico step-tick" data-icon="check"></span></span>
+          <span class="ico jump-ico" aria-hidden="true" data-icon="star"></span>
+          <span class="lang-zh">总结回顾</span><span class="lang-en">Summary</span>
+          <span class="step-state"><span class="lang-zh">未开始</span><span class="lang-en">Not yet</span></span>
+        </button>
+      </li>
+    </ol>
+    <p class="jump-group micro"><span class="lang-zh">直接去某个模块</span><span class="lang-en">Jump to a module</span></p>
+    <div class="jump-grid" id="jump-modules"></div>
+    <p class="jump-group micro"><span class="lang-zh">作品集</span><span class="lang-en">Portfolio</span></p>
+    <div class="jump-grid">
+      <button class="jump-item" type="button" data-goto="about">
+        <span class="ico" aria-hidden="true" data-icon="brain"></span>
+        <span class="lang-zh">关于我 &amp; 理论应用</span><span class="lang-en">About me &amp; theory</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- 旁白字幕条已删除（原先这里有一条 #caption-bar）。
+     它本该默认隐藏、只有打开“字幕”时才出现，但 .caption-bar 的 display:flex
+     盖过了 [hidden]，结果变成每一页顶部常驻一条空栏。连同右上角的“字幕”开关一起移除，
+     避免留下一个点了没有反应的按钮。删除依据与替代做法见 设计说明-Design-Notes.md。 -->
+
+<main id="app">
+
+  <!-- ==================================================================
+       VIEW 1 · 首页 / HOME
+       [L2-Interactive] Demand gaze + medium close-up: 向导“地小球”正面看向
+       学生并挥手，建立亲近的社会距离；语气是对话式的。
+       [L2-Salience] 封面用高亮度、大尺寸的太阳系插图成为最显著元素。
+       ================================================================== -->
+  <section id="view-home" class="view" aria-labelledby="home-title">
+    <div class="hero">
+      <!-- [L1-Visual/Spatial] 视觉 + 空间模态：主视觉在左，文字与按钮在右。
+           [L2-Narrative] 这张图是「运行中的太阳系」：八颗行星按真实顺序、
+           真实轨道偏心率、同一公转方向运动，内侧快外侧慢。
+           [L3-Contiguity] 点行星 → 简介卡片就出现在那颗行星旁边。
+           注意：这里不能加 aria-hidden，因为行星是可聚焦的按钮。 -->
+      <div class="hero-art">
+        <div class="hero-stage">
+          <div class="orbit-map hero-solar" data-solar="hero"></div>
+
+          
+        </div>
+
+        <p class="solar-caption">
+                  <span class="lang-zh">八颗行星都朝同一个方向走。离太阳越远越慢。</span>
+                  <span class="lang-en">All eight planets go the same way. Farther out = slower.</span>
+                </p>
+
+        <div class="guide guide-hero">
+                            <button class="guide-btn" type="button" data-narrate="home"
+                                    aria-label="点一下地小球，听它说话 / Tap the little Earth ball to hear it talk">
+                              <span class="guide-figure" aria-hidden="true"></span>
+                              <span class="guide-play" aria-hidden="true"><span class="ico" data-icon="speaker"></span></span>
+                            </button>
+                            <div class="guide-say">
+                              <p class="bubble">
+                                <span class="lang-zh">你好！我是地小球。</span>
+                                <span class="lang-en">Hi! I’m Earthie.</span>
+                              </p>
+                              <p class="guide-hint">
+                                <span class="lang-zh">点一下地小球，听听它想说什么</span>
+                                <span class="lang-en">Tap the little Earth ball to hear what it says</span>
+                              </p>
+                            </div>
+                          </div>
+
+        
+      </div>
+
+      <div class="hero-copy">
+        <h2 id="home-title" class="hero-title">
+          <span class="lang-zh">一起去看看我们的太阳系吧！</span>
+          <span class="lang-en">Let’s go and look at our Solar System!</span>
+        </h2>
+
+        <div class="hero-actions">
+          <button class="btn btn-primary" type="button" data-goto="pretrain">
+            <span class="ico" aria-hidden="true" data-icon="play"></span>
+            <span class="lang-zh">从预习卡片开始</span><span class="lang-en">Start with pre-training</span>
+          </button>
+        </div>
+
+        <!-- 原「先玩拖拽游戏」按钮已按用户要求删除：练习区仍在顶部学习路径条与「跳到」菜单里，
+             入口没有丢，只是首页不再重复第二个行动号召。 -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================================
+       VIEW 2 · 预习页 / PRE-TRAINING
+       [L3-Pre-training] 在正式学行星之前，先把 4 个核心术语拎出来单独教，
+       降低后面的认知压力。每张卡片 = 一个术语 + 一句儿童语言解释 + 可选旁白。
+       [L3-Contiguity] 图标、术语、解释三者贴在同一个卡片框内（Framing）。
+       ================================================================== -->
+  <section id="view-pretrain" class="view" hidden aria-labelledby="pretrain-title">
+    <header class="view-head">
+      <p class="view-kicker"><span class="lang-zh">第 2 站</span><span class="lang-en">Step 2</span></p>
+      <h2 id="pretrain-title" class="view-title">
+        <span class="lang-zh">先认识 4 个词，等会儿就不难了</span>
+        <span class="lang-en">Four words first — then nothing is hard</span>
+      </h2>
+      <!-- [L3-Coherence] 原来这里还有一句“你将会一直听到这 4 个词”的说明，属于关于页面本身的元话语，已删除。 -->
+      <div class="badge-row">
+        <span class="theory-badge">L3 预训练原则 Pre-training</span>
+        <span class="theory-badge">L3 分段原则 Segmenting</span>
+        <span class="theory-badge">L1 音频模态 · 关键词旁白</span>
+      </div>
+    </header>
+
+    <div class="term-grid" id="term-grid"><!-- 由 script.js 生成 --></div>
+
+    <!-- [L3-Boundary] 预习小检查：2 题、二选一、可以无限重试，不制造压力。 -->
+    <section class="panel panel-quiet" aria-labelledby="pretrain-check-title">
+      <div class="panel-head">
+        <h3 id="pretrain-check-title" class="panel-title">
+          <span class="lang-zh">准备好了吗？2 道小问题</span>
+          <span class="lang-en">Ready? 2 quick questions</span>
+        </h3>
+        <span class="theory-badge">L3 生成性活动 · 自我小测</span>
+      </div>
+      <div class="quiz-block" id="pretrain-quiz"></div>
+    </section>
+
+    <nav class="step-footer" aria-label="前往下一步 / Next step">
+      <button class="btn btn-ghost" type="button" data-goto="home">
+        <span class="ico" aria-hidden="true" data-icon="chevronLeft"></span> <span class="lang-zh">回首页</span><span class="lang-en">Back home</span>
+      </button>
+      <button class="btn btn-primary" type="button" data-goto="learn">
+        <span class="lang-zh">开始学太阳</span><span class="lang-en">Start with the Sun</span> <span class="ico" aria-hidden="true" data-icon="chevronRight"></span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- ==================================================================
+       VIEW 3 · 分段学习 / SEGMENTED MODULES
+       [L3-Segmenting] 5 个模块，一次只看一个，学生自己点“下一步”。
+       [L2-Given/New]  每个模块内部：左边“你已经知道的”＝Given，右边“今天的新发现”＝New。
+       [L2-Ideal/Real] 上方“想象一下”＝Ideal（趣味想象）。
+       （原来下方还有一条“真实数字 / Real numbers”的数据带，用户要求删掉，已整块移除；
+         8 颗行星／太阳是恒星／地球一年 365 天这几个数字在“今天的新发现”和行星资料卡里都还在。）
+       ================================================================== -->
+  <section id="view-learn" class="view" hidden aria-labelledby="learn-title">
+    <header class="view-head">
+      <p class="view-kicker"><span class="lang-zh">第 3 站</span><span class="lang-en">Step 3</span></p>
+      <h2 id="learn-title" class="view-title">
+        <span class="lang-zh">一段一段看，随时可以停</span>
+        <span class="lang-en">One piece at a time — pause whenever you like</span>
+      </h2>
+      <div class="badge-row">
+        <span class="theory-badge">L2 语篇元功能 · Given–New（左已知 → 右新知）</span>
+        <span class="theory-badge">L3 邻近性原则 Contiguity</span>
+        <span class="theory-badge">L3 模态原则 Modality</span>
+      </div>
+    </header>
+
+    <!-- 模块选择条：分段控制 + 非线性跳转二合一 -->
+    <nav class="module-nav" id="module-nav" aria-label="学习模块 / Modules"></nav>
+    <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+
+    <!-- ---------- 模块 1 · 太阳系简介 ---------- -->
+    <article class="module" data-module="1" hidden>
+      <header class="module-head">
+        <p class="module-kicker"><span class="lang-zh">模块</span><span class="lang-en">Module</span> 1 / 2</p>
+        <h3 class="module-title">
+          <span class="lang-zh">大家都绕着太阳走</span>
+          <span class="lang-en">Everything circles the Sun</span>
+        </h3>
+        <div class="badge-row">
+          <span class="theory-badge">L2 概念元功能 · 叙事模式 Narrative（运动矢量/轨迹线）</span>
+          <span class="theory-badge">L2 显著性 Salience</span>
+          <span class="theory-badge">L1 空间模态 · 同心圆轨道布局</span>
+        </div>
+      </header>
+
+      <!-- 上方 = Ideal（理想/想象） -->
+      <section class="band band-ideal">
+        <span class="band-tag"><span class="lang-zh">想象一下</span><span class="lang-en">Imagine it</span></span>
+        <div class="guide guide-row">
+          <div class="guide-figure" aria-hidden="true"></div>
+          <p class="bubble">
+            <span class="lang-zh">坐火箭从太阳出发，你会遇到谁？</span>
+            <span class="lang-en">Set off from the Sun in a rocket. Who do you meet?</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 中间：下面 3 栏 = Given（左）· 图＋贴图文字 · New（右） -->
+      <div class="module-grid">
+        <section class="pane pane-given">
+          <h4 class="pane-title">
+            <span class="pane-dot" aria-hidden="true"></span>
+            <span class="lang-zh">你已经知道的</span><span class="lang-en">What you already know</span>
+          </h4>
+          <ul class="bullet-list">
+            <li><span class="lang-zh">白天能看到太阳。</span><span class="lang-en">In the day we see the Sun.</span></li>
+          </ul>
+        </section>
+
+        <section class="pane pane-figure">
+          <!-- [L2-Narrative] 公转动画＝叙事模式：行星带着运动矢量绕太阳转。
+               [L2-Salience] 太阳最大最亮，行星按轨道依次排开。
+               [L3-Signaling] 每颗身后的拖尾标出“方向”，虚线椭圆标出“路线”。
+               [L3-Boundary] 学生可暂停动画，动画只为解释“公转”，不为炫酷。
+               [用户要求] 这里的动图不再画“教学版”（行星名称 + 公转方向箭头），
+               直接放首页那段动画的小号复制：同一个真实模型，只是盒子更窄。 -->
+          <div class="orbit-stage">
+            <!-- 同一套真实模型的教学版：加了行星名称与公转方向箭头 -->
+            <div class="orbit-map solar-mini" data-solar="hero"></div>
+            <p class="figure-caption">
+              <span class="lang-zh">椭圆＝真实轨道，身后那条尾巴＝它正往哪边走。点一颗行星看它的资料卡。</span>
+              <span class="lang-en">Ellipses = real orbits; the tail behind each one shows where it is heading. Tap a planet for its card.</span>
+            </p>
+          </div>
+          <!-- [L3-Redundancy] 这里原来有一排“关键词胶囊”（太阳系／公转／轨道），
+               与图注和右边的“今天的新发现”说的是同一件事，已按冗余原则整块删除。 -->
+          <!-- [L3-Modality] 关键说明优先给短旁白。屏幕文字保持少量关键词。 -->
+          <div class="speak-row">
+            <button class="btn btn-speak" type="button" data-narrate="m1">
+              <span class="ico" aria-hidden="true" data-icon="speaker"></span> <span class="lang-zh">听一句</span><span class="lang-en">Listen</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="pane pane-new">
+          <h4 class="pane-title">
+            <span class="pane-dot" aria-hidden="true"></span>
+            <span class="lang-zh">今天的新发现</span><span class="lang-en">New today</span>
+          </h4>
+          <ul class="bullet-list bullet-new">
+            <li><span class="lang-zh">太阳系＝太阳＋8 颗行星＋它们的卫星。</span><span class="lang-en">Solar System: the Sun + 8 planets + moons.</span></li>
+            <li><span class="lang-zh">行星走自己的<b class="hk">轨道</b>，这叫<b class="hk">公转</b>。</span><span class="lang-en">Planets keep to their own <b class="hk">orbit</b>: that is <b class="hk">revolving</b>.</span></li>
+            <li><span class="lang-zh">离太阳越远越冷。</span><span class="lang-en">Farther from the Sun = colder.</span></li>
+          </ul>
+        </section>
+      </div>
+
+      <nav class="step-footer">
+        
+        <button class="btn btn-ghost btn-home" type="button" data-goto="home"><span class="ico" aria-hidden="true" data-icon="home"></span> <span class="lang-zh">回首页</span><span class="lang-en">Home</span></button><button class="btn btn-ghost" type="button" data-goto="pretrain"><span class="ico" aria-hidden="true" data-icon="chevronLeft"></span> <span class="lang-zh">回预习卡片</span><span class="lang-en">Back to pre-training</span></button>
+        <button class="btn btn-primary" type="button" data-module-next><span class="lang-zh">下一步：认识太阳</span><span class="lang-en">Next: the Sun</span> <span class="ico" aria-hidden="true" data-icon="chevronRight"></span></button>
+      </nav>
+    </article>
+
+    <!-- ---------- 模块 2 · 太阳 ---------- -->
+    <!-- ---------- 模块 2 · 太阳与八大行星（原「太阳」+「内行星」+「巨行星」+「远行星」四页合并） ----------
+           横排全家福是本页主视觉：点任意一颗天体，资料卡就出现在它旁边。
+           原来四页里的分类信息（岩石行星／巨行星／冰巨行星）保留成下方一行三块。 -->
+      <article class="module" data-module="2">
+        <header class="module-head">
+          <p class="module-kicker"><span class="lang-zh">模块</span><span class="lang-en">Module</span> 2 / 2</p>
+          <h3 class="module-title">
+            <span class="lang-zh">太阳与八大行星</span>
+            <span class="lang-en">The Sun and the eight planets</span>
+          </h3>
+          <div class="badge-row">
+            <span class="theory-badge">L2 概念模式 · 分类与属性</span>
+            <span class="theory-badge">L3 分段原则 · 点开才展开</span>
+            <span class="theory-badge">L3 邻近性原则 · 卡片贴着天体</span>
+          </div>
+        </header>
+
+        <section class="band band-ideal">
+          <span class="band-tag"><span class="lang-zh">上面：想象一下 · Ideal</span><span class="lang-en">Top: Imagine · Ideal</span></span>
+          <div class="guide guide-row">
+            <div class="guide-figure" aria-hidden="true"></div>
+            <p class="bubble">
+              <span class="lang-zh">坐火箭从太阳出发，一路上会遇见谁？点每颗看它的事。</span>
+              <span class="lang-en">Flying out from the Sun, who would you meet? Tap each one.</span>
+            </p>
+          </div>
+        </section>
+
+        <div class="lineup-wrap">
+          <div class="orbit-map solar-lineup" data-solar="lineup"></div>
+          <p class="lineup-hint">
+            <span class="lang-zh">点任意一颗天体，看它的资料卡（大小顺序是真的，远处的行星被缩小了才排得下）</span>
+            <span class="lang-en">Tap any body for its card — the order and relative sizes are real; the far planets are shrunk so they fit on one row.</span>
+          </p>
+        </div>
+
+        <section class="lineup-groups">
+          <div class="group-chip">
+            <strong><span class="lang-zh">岩石行星</span><span class="lang-en">Rocky planets</span></strong>
+            <span><span class="lang-zh">水星 · 金星 · 地球 · 火星：离太阳近，由石头组成，都比较小。</span><span class="lang-en">Mercury · Venus · Earth · Mars — close to the Sun, made of rock, and small.</span></span>
+          </div>
+          <div class="group-chip">
+            <strong><span class="lang-zh">巨行星</span><span class="lang-en">Giant planets</span></strong>
+            <span><span class="lang-zh">木星 · 土星：最大，主要由气体组成，木星有大红斑，土星有环。</span><span class="lang-en">Jupiter · Saturn — the biggest, mostly gas; Jupiter has the Great Red Spot, Saturn has the rings.</span></span>
+          </div>
+          <div class="group-chip">
+            <strong><span class="lang-zh">冰巨行星</span><span class="lang-en">Ice giants</span></strong>
+            <span><span class="lang-zh">天王星 · 海王星：最远，非常冷，是蓝色的。</span><span class="lang-en">Uranus · Neptune — the farthest, freezing cold, and blue.</span></span>
+          </div>
+        </section>
+
+        <section class="band band-takeaway">
+          <span class="band-tag"><span class="lang-zh">下面：带走三句话 · Takeaways</span><span class="lang-en">Bottom: three things to take away</span></span>
+          <ul class="takeaway-list">
+            <li><span class="lang-zh"><b>顺序</b>：水星 → 金星 → 地球 → 火星 → 木星 → 土星 → 天王星 → 海王星。</span><span class="lang-en"><b>Order</b>: Mercury → Venus → Earth → Mars → Jupiter → Saturn → Uranus → Neptune.</span></li>
+            <li><span class="lang-zh"><b>分两类</b>：里面四颗是岩石行星，外面四颗是巨行星（冰巨行星更冷）。</span><span class="lang-en"><b>Two families</b>: the inner four are rocky; the outer four are giants (the farthest two are ice giants).</span></li>
+            <li><span class="lang-zh"><b>规律</b>：离太阳越远，越冷，绕太阳一圈的时间也越长。</span><span class="lang-en"><b>The rule</b>: the farther from the Sun, the colder it is and the longer one year takes.</span></li>
+          </ul>
+        </section>
+
+        <nav class="step-footer">
+          <button class="btn btn-ghost" type="button" data-module-prev><span class="ico" aria-hidden="true" data-icon="chevronLeft"></span> <span class="lang-zh">回太阳系简介</span><span class="lang-en">Back to the overview</span></button>
+          <button class="btn btn-primary" type="button" data-goto="practice"><span class="lang-zh">去动手练习</span><span class="lang-en">Go to practice</span> <span class="ico" aria-hidden="true" data-icon="chevronRight"></span></button>
+        </nav>
+      </article>
+    </section>
+
+  <!-- ==================================================================
+       VIEW 4 · 动手练习 / PRACTICE
+       [L3-Generative Activity] 生成性活动原则的三个落点：
+         ① 拖拽匹配（把行星放到正确轨道）② 自我解释（为什么地球适合生命）
+         ③ 自我小测（巩固记忆 + 分类与推理迁移）
+       [L3-Boundary] 每个活动都有清晰指引、可重试、有提示，不设倒计时、不扣分。
+       ================================================================== -->
+  <section id="view-practice" class="view" hidden aria-labelledby="practice-title">
+    <header class="view-head">
+      <p class="view-kicker"><span class="lang-zh">第 4 站</span><span class="lang-en">Step 4</span></p>
+      <h2 id="practice-title" class="view-title">
+        <span class="lang-zh">轮到你了：动手、动嘴、动脑</span>
+        <span class="lang-en">Your turn: hands, words and brain</span>
+      </h2>
+      <div class="badge-row">
+        <span class="theory-badge">L3 生成性活动原则</span>
+        <span class="theory-badge">L1 具身认知 Embodiment · 拖拽</span>
+        <span class="theory-badge">L3 反馈 + 边界条件</span>
+      </div>
+    </header>
+
+    <!-- 活动切换标签（非线性：学生可以先玩任意一个） -->
+    <div class="tab-row" role="tablist" aria-label="练习活动 / Activities">
+      <button class="tab is-active" type="button" role="tab" aria-selected="true" data-tab="drag">
+        <span class="ico" aria-hidden="true" data-icon="drag"></span> ① <span class="lang-zh">拖拽摆轨道</span><span class="lang-en">Drag to the right orbit</span>
+      </button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-tab="think">
+        <span class="ico" aria-hidden="true" data-icon="think"></span> ② <span class="lang-zh">想一想、说一说</span><span class="lang-en">Think and explain</span>
+      </button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-tab="quiz">
+        <span class="ico" aria-hidden="true" data-icon="check"></span> ③ <span class="lang-zh">自我小测</span><span class="lang-en">Quick self-test</span>
+      </button>
+    </div>
+
+    <!-- ---- 活动 ① 拖拽 ---- -->
+    <section class="panel tab-panel is-active" data-tab-panel="drag" role="tabpanel" aria-labelledby="practice-title">
+      <div class="panel-head">
+        <h3 class="panel-title">
+          <span class="lang-zh">把行星拖到正确的轨道上</span>
+          <span class="lang-en">Drag each planet onto its orbit</span>
+        </h3>
+        <span class="theory-badge">L1 手势/动效模态 · 具身交互</span>
+      </div>
+      <!-- [L3-Boundary] 任务指引写清楚：做什么、怎么做、可以怎么求助。 -->
+      <ol class="instruction-list">
+        <li><span class="lang-zh">把下面的行星拖进虚线圆圈里。</span><span class="lang-en">Drag each planet into a dotted circle.</span></li>
+        <li><span class="lang-zh">1 表示离太阳最近，8 表示最远。</span><span class="lang-en">1 = nearest the Sun, 8 = farthest.</span></li>
+        <li><span class="lang-zh"><b class="hk">圆圈越大＝行星越大</b>。</span><span class="lang-en"><b class="hk">Bigger circle = bigger planet.</b></span></li>
+        <li><span class="lang-zh">放错了也没关系，再试一次。</span><span class="lang-en">Wrong is fine. Try again.</span></li>
+      </ol>
+
+      <div class="drag-board">
+        <div class="orbit-track" id="orbit-track"><!-- script.js 生成 --></div>
+        <p class="track-legend">
+          <span class="lang-zh">公转方向</span><span class="lang-en">Direction of orbit</span>
+          <span class="arrow-line" aria-hidden="true"><span class="ico" data-icon="arrowRight"></span></span>
+        </p>
+        <!-- 圆圈大小＝相对大小，这里同时给出真实倍数，避免把压缩比例当成真实比例 -->
+        <p class="track-note">
+          <span class="lang-zh">圆圈按真实大小比例画（压缩过）。木星有 11 个地球那么宽。</span>
+          <span class="lang-en">Circles show real size ratios, squashed to fit. Jupiter is 11 Earths across.</span>
+        </p>
+        <div class="chip-tray" id="chip-tray"><!-- script.js 生成 --></div>
+      </div>
+
+      <div class="practice-controls">
+        <button class="btn btn-ghost" type="button" id="drag-hint"><span class="ico" aria-hidden="true" data-icon="bulb"></span> <span class="lang-zh">给我一个提示</span><span class="lang-en">Give me a hint</span></button>
+        <button class="btn btn-ghost" type="button" id="drag-reset"><span class="ico" aria-hidden="true" data-icon="refresh"></span> <span class="lang-zh">重新摆一次</span><span class="lang-en">Start over</span></button>
+        <p class="score-line"><span class="lang-zh">已放好</span><span class="lang-en">Placed</span> <b id="drag-count">0</b> / 8</p>
+      </div>
+      <p class="feedback" id="drag-feedback" role="status"></p>
+      <p class="hint-line" id="drag-hint-text" role="status"></p>
+    </section>
+
+    <!-- ---- 活动 ② 自我解释 ---- -->
+    <section class="panel tab-panel" data-tab-panel="think" role="tabpanel" hidden aria-labelledby="practice-title">
+      <div class="panel-head">
+        <h3 class="panel-title">
+          <span class="lang-zh">想一想：为什么地球适合生命？</span>
+          <span class="lang-en">Think: why is Earth a good home for living things?</span>
+        </h3>
+        <span class="theory-badge">L3 生成性活动 · 自我解释 Self-explanation</span>
+      </div>
+      <!-- [L3-Personalization] 第二人称、请儿童“用自己的话说”，鼓励生成性加工。 -->
+      <p class="lede-inline">
+        <span class="lang-zh">要说服外星朋友来地球住，你会说哪几个理由？选一选，再写一句。</span>
+        <span class="lang-en">Which reasons would you give an alien? Pick, then write one sentence.</span>
+      </p>
+
+      <div class="reason-chips" id="reason-chips"><!-- script.js 生成 --></div>
+
+      <label class="field-label" for="think-input">
+        <span class="lang-zh">用你自己的话说一句（写错也没关系）：</span>
+        <span class="lang-en">Write one sentence in your own words (no wrong answers):</span>
+      </label>
+      <textarea id="think-input" class="text-area" rows="3" placeholder="我觉得……"></textarea>
+
+      <div class="practice-controls">
+        <button class="btn btn-ghost" type="button" id="think-save"><span class="ico" aria-hidden="true" data-icon="save"></span> <span class="lang-zh">保存我的想法</span><span class="lang-en">Save my idea</span></button>
+        <button class="btn btn-primary" type="button" id="think-reveal"><span class="ico" aria-hidden="true" data-icon="search"></span> <span class="lang-zh">看看参考想法</span><span class="lang-en">See a model answer</span></button>
+      </div>
+      <div class="model-answer" id="think-model" hidden></div>
+      <p class="feedback" id="think-feedback" role="status"></p>
+    </section>
+
+    <!-- ---- 活动 ③ 小测 ---- -->
+    <section class="panel tab-panel" data-tab-panel="quiz" role="tabpanel" hidden aria-labelledby="practice-title">
+      <div class="panel-head">
+        <h3 class="panel-title">
+          <span class="lang-zh">自我小测：5 题，随时可以重来</span>
+          <span class="lang-en">Self-test: 5 questions, retry any time</span>
+        </h3>
+        <span class="theory-badge">L3 生成性活动 · 记忆 Retention + 迁移 Transfer</span>
+      </div>
+      <p class="score-line score-line-big">
+        <span class="lang-zh">答对</span><span class="lang-en">Correct</span> <b id="quiz-score">0</b> / <span id="quiz-total">5</span>
+      </p>
+      <div class="quiz-block" id="main-quiz"><!-- script.js 生成 --></div>
+      <div class="practice-controls">
+        <button class="btn btn-ghost" type="button" id="quiz-reset"><span class="ico" aria-hidden="true" data-icon="refresh"></span> <span class="lang-zh">再做一次</span><span class="lang-en">Try again</span></button>
+      </div>
+    </section>
+
+    <nav class="step-footer">
+      
+        <button class="btn btn-ghost btn-home" type="button" data-goto="home"><span class="ico" aria-hidden="true" data-icon="home"></span> <span class="lang-zh">回首页</span><span class="lang-en">Home</span></button><button class="btn btn-ghost" type="button" data-goto="learn"><span class="ico" aria-hidden="true" data-icon="chevronLeft"></span> <span class="lang-zh">回去看模块</span><span class="lang-en">Back to modules</span></button>
+      <button class="btn btn-primary" type="button" data-goto="summary"><span class="lang-zh">去总结页</span><span class="lang-en">Go to summary</span> <span class="ico" aria-hidden="true" data-icon="chevronRight"></span></button>
+    </nav>
+  </section>
+
+  <!-- ==================================================================
+       VIEW 5 · 总结 / SUMMARY
+       [Meaningful learning] 记忆（名字/特征）＋迁移（分类、推理、自己做一张卡片）。
+       [L3-Segmenting] 每张卡片都能点回对应模块复习。
+       ================================================================== -->
+  <section id="view-summary" class="view" hidden aria-labelledby="summary-title">
+    <header class="view-head">
+      <p class="view-kicker"><span class="lang-zh">第 5 站</span><span class="lang-en">Step 5</span></p>
+      <h2 id="summary-title" class="view-title">
+        <span class="lang-zh">串起来看：一张图记住太阳系</span>
+        <span class="lang-en">Put it together: the whole Solar System at a glance</span>
+      </h2>
+      <p class="view-lede">
+        <span class="lang-zh">点一颗星球，回到知识页面看自己记对了没有。</span>
+        <span class="lang-en">Tap a planet to go back to the lesson and check yourself.</span>
+      </p>
+    </header>
+
+    <div class="summary-lede-row">
+      <div class="guide">
+        <div class="guide-figure" aria-hidden="true"></div>
+        <p class="bubble">
+            <span class="lang-zh">先看着这些星球，回忆一下它们各自的事，再点一颗回去看看自己记对了没有。名字我们故意没写——忘了也不要紧，点一下就回去复习。</span>
+            <span class="lang-en">Look at these planets and remember what you know, then tap one to go back and check. The names are hidden on purpose — it is fine to forget, just tap and go back to review.</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="summary-grid" id="summary-grid"><!-- script.js 生成 --></div>
+
+    <!-- 自评清单挪到「回忆星球」这张图的下方，并给了它自己的标题
+         [用户要求：放到回忆复习星球的下方，加一个标题] -->
+    <div class="summary-bottom">
+    <section class="panel panel-quiet checklist-box">
+      <div class="panel-head">
+        <h3 class="panel-title">
+          <span class="lang-zh">我会说：自己勾一勾</span>
+          <span class="lang-en">I can say it — tick the ones you can do</span>
+        </h3>
+        <span class="theory-badge">自我评估 · Self-check</span>
+      </div>
+      <ul class="checklist" id="summary-checklist"><!-- script.js 生成 --></ul>
+    </section>
+
+    <section class="panel panel-quiet transfer-box">
+      <div class="panel-head">
+        <h3 class="panel-title">
+          <span class="lang-zh">迁移小挑战：设计你自己的行星</span>
+          <span class="lang-en">Transfer challenge: design your own planet</span>
+        </h3>
+        <span class="theory-badge">有意义学习 · 迁移 Transfer</span>
+      </div>
+      <p class="lede-inline">
+        <span class="lang-zh">用今天的词（公转、卫星、恒星、岩石行星、巨行星）写 3 句：它在哪里？由什么组成？绕着谁转？</span>
+        <span class="lang-en">Make up your own planet: where is it? What is it made of? What does it go around?</span>
+      </p>
+      <textarea class="text-area" rows="2" id="transfer-input" placeholder="我的行星……"></textarea>
+    </section>
+    </div>
+
+    <nav class="step-footer">
+      
+        <button class="btn btn-ghost" type="button" data-goto="practice"><span class="ico" aria-hidden="true" data-icon="chevronLeft"></span> <span class="lang-zh">再练一次</span><span class="lang-en">Practise again</span></button>
+      <button class="btn btn-primary" type="button" data-goto="home"><span class="ico" aria-hidden="true" data-icon="home"></span> <span class="lang-zh">回到首页</span><span class="lang-en">Back to the start</span></button>
+    </nav>
+  </section>
+  <!-- ==================================================================
+       VIEW 6 · 关于我 + 理论应用 / ABOUT & THEORETICAL APPLICATION
+       这一页是给「数字学习作品集」用的：自我介绍 + 挑 5 条理论，说明它们
+       分别落在原型的哪一处，并配原型截图与可测量的证据。
+       [Rubric] Knowledge＝课程概念掌握；Skills＝多种媒介形式的作品；
+       General Competence＝可落地；Innovative & Simple＝儿童能用。
+       ================================================================== -->
+  <section id="view-about" class="view" hidden aria-labelledby="about-title">
+    <header class="view-head">
+      <p class="view-kicker"><span class="lang-zh">作品集 · 关于我</span><span class="lang-en">Portfolio · About me</span></p>
+      <h2 id="about-title" class="view-title">
+        <span class="lang-zh">自我介绍 &amp; 理论应用</span>
+        <span class="lang-en">Self-introduction &amp; Theoretical application</span>
+      </h2>
+      <p class="view-lede">
+        <span class="lang-zh">我是谁、为什么做这个原型，以及它具体落实了课程里的哪 4 条理论——每条都给出实现方式和可测量的证据。</span>
+        <span class="lang-en">Who I am, why I built this prototype, and the four course principles it puts to work — each with how it is implemented and the evidence I measured.</span>
+      </p>
+    </header>
+
+    <!-- ---------- 1. 自我介绍 ---------- -->
+    <div class="about-grid">
+      <section class="panel bio-card">
+        <div class="bio-head">
+          <span class="bio-avatar" aria-hidden="true">JY</span>
+          <div>
+            <h3 class="bio-name">Jessie (Yang Jiaxi)</h3>
+            <p class="micro">MSc(TDLL) · The University of Hong Kong</p>
+          </div>
+        </div>
+        <p class="bio-text bio-lead">
+          <span class="lang-zh">我叫 Jessie（杨嘉汐）。我的第一个学位是幼儿教育，现在我是「学习科技、设计与领导」理学硕士（MSc(TDLL)）的研究生。到目前为止我所有的经验都来自实习：在一所 K–12 学校做的教学实习（我教了所有科目）、一个教育评估项目，以及在一家教育科技公司做的课程与产品实习。</span>
+          <span class="lang-en">My name is Jessie (Yang Jiaxi). I studied early childhood education for my first degree, and I am now a postgraduate student on the MSc in Technology, Design and Leadership for Learning. All of my experience so far has been through internships: a teaching internship in a K&ndash;12 school where I covered all subjects, an education assessment project, and a curriculum and product internship at an education technology company.</span>
+        </p>
+        <ul class="bio-facts">
+          <li><span class="lang-zh">第一个学位：幼儿教育</span><span class="lang-en">First degree: Early Childhood Education</span></li>
+          <li><span class="lang-zh">现在：MSc(TDLL)，香港大学教育学院</span><span class="lang-en">Now: MSc(TDLL), Faculty of Education, HKU</span></li>
+          <li><span class="lang-zh">实习：K–12 全科教学 · 教育评估项目 · 教育科技课程与产品</span><span class="lang-en">Internships: K–12 teaching (all subjects) · assessment project · EdTech curriculum &amp; product</span></li>
+          <li><span class="lang-zh">本作品的对象：8–10 岁小学生，用于课堂</span><span class="lang-en">Audience of this artefact: ages 8–10, for classroom use</span></li>
+        </ul>
+      </section>
+
+    </div>
+
+    <!-- ---------- 3. 四条理论 ---------- -->
+    <h3 class="about-section-title">
+      <span class="lang-zh">理论应用：四个重点</span><span class="lang-en">Theoretical application: four key principles</span>
+    </h3>
+    <div class="theory-list">
+      <article class="theory-card" data-theory="Lesson 1">
+        <div class="theory-body">
+          <p class="theory-num"><span class="lang-zh">重点 1</span><span class="lang-en">Key idea 1</span> · <span class="lang-zh">Lesson 1 · 五种模态</span><span class="lang-en">Lesson 1 · five modes</span></p>
+          <h4 class="theory-title"><span class="lang-zh">同一件事，交给最擅长的表达方式</span><span class="lang-en">Let each mode do what it is best at</span></h4>
+          <p class="theory-text">
+            <span class="lang-zh">每种表达方式都有它擅长和做不来的事。一张图能在一秒内说明「谁在谁的里面」「谁比谁大」，但它说不出「88 天」；文字能准确说出「88 天」，却没法表示方向。所以设计的问题不是「怎么把同一句话写两遍」，而是「这件事谁来说最合适」。</span>
+            <span class="lang-en">Every way of expressing something has strengths and limits. A picture shows "who is inside whom" or "who is bigger" in a second but it cannot say "88 days". Writing says "88 days" exactly but cannot show a direction. So the design question is not "how do I say this twice?", it is "which mode says this best?"</span>
+          </p>
+          <p class="theory-how">
+            <span class="lang-zh">首页就是这样分工的：<b>位置和画面</b>负责轨道顺序与大小比例；<b>文字</b>只写名字和数字；<b>声音</b>用一句 15 秒的口语解释关键点；<b>动作</b>交给手指——点行星、拖行星；<b>动画</b>只做一件事，就是公转本身，因为那是静图最说不清的。</span>
+            <span class="lang-en">The home screen splits the work: <b>position and picture</b> carry the order of the orbits and the size ratio; <b>writing</b> carries only names and numbers; <b>sound</b> gives the key idea in one 15-second spoken sentence; <b>gesture</b> belongs to the hand — tap a planet, drag a planet; and <b>animation</b> does exactly one job, the orbit itself, because that is the thing a still picture cannot explain.</span>
+          </p>
+          <p class="theory-evidence">
+            <span class="lang-zh">八颗行星的公转方向实测全部一致（逆时针），大小顺序也是真实的（水星最小、木星最大）。同一个大小模型还被复用到三处——首页动画、拖拽游戏的虚线圆圈、复习页那排天体——所以"木星最大"这件事不会换个页面就变一个说法。</span>
+            <span class="lang-en">All eight planets were measured moving the same way (anticlockwise), and their sizes keep the real order — Mercury smallest, Jupiter largest. The same size model is reused in three places — the home animation, the dashed circles in the drag game, and the row of planets on the summary page — so "Jupiter is the biggest" never changes its story from one screen to the next.</span>
+          </p>
+        </div>
+        <figure class="theory-shot">
+          <a href="about/home.jpg" target="_blank" rel="noopener"><img src="about/home.jpg" alt="Home: the animation with clickable planets" loading="lazy" /></a>
+          <figcaption><span class="lang-zh">首页：动画 + 可直接点的行星</span><span class="lang-en">Home: the animation with clickable planets</span></figcaption>
+        </figure>
+        <div class="theory-actions">
+          <button class="btn btn-ghost btn-mini" type="button" data-goto="home"><span class="lang-zh">去看这一处</span><span class="lang-en">Open this screen</span></button>
+        </div>
+      </article>
+
+      <article class="theory-card" data-theory="Lesson 2">
+        <div class="theory-body">
+          <p class="theory-num"><span class="lang-zh">重点 2</span><span class="lang-en">Key idea 2</span> · <span class="lang-zh">Lesson 2 · 视觉语法</span><span class="lang-en">Lesson 2 · visual grammar</span></p>
+          <h4 class="theory-title"><span class="lang-zh">版面的位置本身也在说话</span><span class="lang-en">The layout is talking too</span></h4>
+          <p class="theory-text">
+            <span class="lang-zh">同一个页面上，上方通常读作「理想、想象」，下方读作「真实、事实」；左边读作「我已经知道的」，右边读作「新来的」。看的人不用别人提醒，就会按这个顺序读。</span>
+            <span class="lang-en">On a page, the top half usually reads as ideal or imagined, and the bottom half as real and factual; the left side reads as what I already know, and the right side as what is new. Viewers follow that order without being told.</span>
+          </p>
+          <p class="theory-how">
+            <span class="lang-zh">每个学习模块都用同一套版式：上方一条金色「想象一下」；下面三栏，左边「你已经知道的」，中间是这一段的插图，右边「今天的新发现」。谁被学就用最大的插图（显著性），每一块用各自的边框隔开（框定），向导正面对着你看、用聊天的语气说话。</span>
+            <span class="lang-en">Every lesson module repeats one layout: a gold "Imagine…" strip on top; then three columns — "what you already know" on the left, this module's artwork in the middle, "new today" on the right. The planet being learned gets the biggest picture (salience), each band is separated by its own border (framing), and the guide faces you and talks like a person.</span>
+          </p>
+          <p class="theory-evidence">
+            <span class="lang-zh">1440×900 窗口下实测（视口宽 1414）：左栏 x=74、插图栏 x=458、右栏 x=968，已知在左、新知在右；金色的「想象一下」横条在 y=230，整条压在左右两栏（y=291）之上——位置关系和理论要求的一致。原来模块 1 底部还有一条「真实数字」的 Real 数据带（用来对照 Ideal–Real 上下轴），为了让页面对 8–10 岁的学生更好读，已经整块删掉，所以这一条现在讲的是 Given–New 横轴 + Ideal 上沿。</span>
+            <span class="lang-en">Measured in a 1440 × 900 window (1414 px viewport): the known column sits at x = 74, the artwork column at x = 458 and the new column at x = 968 — known on the left, new on the right; the gold "Imagine…" strip sits at y = 230, above both columns (y = 291). The positions match the theory. Module 1 used to carry an extra "Real numbers" strip along the bottom (that was the Real half of the Ideal–Real axis); it was removed so the page reads more easily for 8–10 year olds, so this card now documents the Given–New horizontal axis plus the Ideal strip on top.</span>
+          </p>
+        </div>
+        <figure class="theory-shot">
+          <a href="about/module.jpg" target="_blank" rel="noopener"><img src="about/module.jpg" alt="Module: imagine above facts, known before new" loading="lazy" /></a>
+          <figcaption><span class="lang-zh">模块页：上「想象一下」、左「已知」→ 右「新知」</span><span class="lang-en">Module: the Imagine strip on top, known on the left, new on the right</span></figcaption>
+        </figure>
+        <div class="theory-actions">
+          <button class="btn btn-ghost btn-mini" type="button" data-goto="learn"><span class="lang-zh">去看这一处</span><span class="lang-en">Open this screen</span></button>
+        </div>
+      </article>
+
+      <article class="theory-card" data-theory="Lesson 3">
+        <div class="theory-body">
+          <p class="theory-num"><span class="lang-zh">重点 3</span><span class="lang-en">Key idea 3</span> · <span class="lang-zh">Lesson 3 · 减少外部负荷</span><span class="lang-en">Lesson 3 · cutting extraneous load</span></p>
+          <h4 class="theory-title"><span class="lang-zh">别让无关的东西占脑子</span><span class="lang-en">Do not let decoration use up the brain</span></h4>
+          <p class="theory-text">
+            <span class="lang-zh">工作记忆很小。和内容无关的花样、以及「屏幕上一大段、喇叭里念同一段」，都会挤掉本该用来理解的空间，所以这些要做减法。</span>
+            <span class="lang-en">Working memory is small. Decoration that has nothing to do with the content, and hearing the very paragraph you are reading, both use up the space that understanding needs. So these get removed.</span>
+          </p>
+          <p class="theory-how">
+            <span class="lang-zh">所以：没有背景音乐，也没有装饰性动画；只有重要词才用金色高亮；旁白说的是「短版口语」，不照读屏幕（字幕默认关掉，需要时才开）；每张说明都贴在它描述的东西旁边——行星的名字就在行星图卡片里，点行星弹出的简介就出现在那颗行星旁边。</span>
+            <span class="lang-en">So: no background music and no decorative animation; only the words that matter get a gold highlight; the voice says a short spoken version instead of reading the screen out loud (captions stay off unless you ask); and every label sits next to the thing it describes — a planet's name lives inside its own card, and the card you open appears beside that planet.</span>
+          </p>
+          <p class="theory-evidence">
+            <span class="lang-zh">14 组关键文字/底色的对比度实测 5.5–16.5:1（全部达到 WCAG AA）；1440、1100、430px 三种宽度下都没有横向滚动；放错位置只给提示，不会判定失败。行星资料卡也一样：点开木星时卡片落在整行星球上方，和九颗天体的球面相交面积为 0%，没有一个知识点需要靠"挡住别的星球"来换取位置。</span>
+            <span class="lang-en">All 14 key text-on-background pairs measure 5.5–16.5:1 (WCAG AA); there is no sideways scrolling at 1440, 1100 or 430 px; and a wrong drop gives a hint rather than a failure. The planet cards follow the same rule: opening Jupiter puts the card above the whole row of planets, with 0 % overlap on any of the nine bodies — no fact is ever placed by covering another planet up.</span>
+          </p>
+        </div>
+        <figure class="theory-shot">
+          <a href="about/drag.jpg" target="_blank" rel="noopener"><img src="about/drag.jpg" alt="Drag game: numbers and dashed circles are signals, not decoration" loading="lazy" /></a>
+          <figcaption><span class="lang-zh">拖拽游戏：序号和虚线都是提示，不是装饰</span><span class="lang-en">Drag game: numbers and dashed circles are signals, not decoration</span></figcaption>
+        </figure>
+        <div class="theory-actions">
+          <button class="btn btn-ghost btn-mini" type="button" data-goto="practice"><span class="lang-zh">去看这一处</span><span class="lang-en">Open this screen</span></button>
+        </div>
+      </article>
+
+      <article class="theory-card" data-theory="Lesson 3">
+        <div class="theory-body">
+          <p class="theory-num"><span class="lang-zh">重点 4</span><span class="lang-en">Key idea 4</span> · <span class="lang-zh">Lesson 3 · 管理本质负荷</span><span class="lang-en">Lesson 3 · pacing the essential load</span></p>
+          <h4 class="theory-title"><span class="lang-zh">一次只给一小片，让他自己按下一步</span><span class="lang-en">One small piece at a time, in the learner's own order</span></h4>
+          <p class="theory-text">
+            <span class="lang-zh">一次学完太阳系太多了。把内容切成小片、让孩子自己决定什么时候继续，会轻松很多；正式内容之前先把要用的词学会，也能省下不少力气。</span>
+            <span class="lang-en">Learning the whole Solar System at once is too much. Cutting it into small pieces, and letting the child decide when to go on, makes it much easier; learning the words they will need before the main content saves effort too.</span>
+          </p>
+          <p class="theory-how">
+            <span class="lang-zh">内容分成「预习 → 2 个模块（太阳系简介 / 太阳与八大行星）→ 3 个练习 → 总结」，一次只出现一段；这一段太长时底部会浮出「上一段 / 下一段」，所以想继续不用先滚到底。正式认识行星之前，先用四张卡片教四个词：恒星、行星、公转、卫星。关键解释用十几秒的语音，而不是一大段文字。总结页也按同一原则分成小块：先看图回忆、再点回知识页对答案，最后才是自评清单和迁移小挑战。</span>
+            <span class="lang-en">The content is cut into pre-training, two modules (an overview, then the Sun and the eight planets), three activities and a summary — one piece on screen at a time, with a floating "previous / next" control whenever a section runs long, so nobody has to scroll to the bottom to continue. Before any planet appears, four cards teach the four words they will need: star, planet, orbit, moon. Key explanations arrive as a short voice clip rather than a paragraph. The summary page follows the same rule: recall from the picture, tap back to the lesson to check, and only then the self-check list and the transfer challenge.</span>
+          </p>
+          <p class="theory-evidence">
+            <span class="lang-zh">1440×900 下五个学习页面各占 0.7–0.9 屏（首页 0.8 / 预习 0.7 / 分段学习 0.8 / 动手练习 0.8 / 总结 0.9），一屏读完不用来回滚；手机 430px 下最长的页面 1.7 屏。</span>
+            <span class="lang-en">At 1440×900 each of the five learning screens takes 0.7–0.9 of a screen (home 0.8, pre-training 0.7, modules 0.8, practice 0.8, summary 0.9) — one screen, no scrolling back and forth; on a 430 px phone the longest screen is 1.7 screens.</span>
+          </p>
+        </div>
+        <figure class="theory-shot">
+          <a href="about/pretrain.jpg" target="_blank" rel="noopener"><img src="about/pretrain.jpg" alt="Pre-training: four words before any planet" loading="lazy" /></a>
+          <figcaption><span class="lang-zh">预习页：先学 4 个词，再认识行星</span><span class="lang-en">Pre-training: four words before any planet</span></figcaption>
+        </figure>
+        <div class="theory-actions">
+          <button class="btn btn-ghost btn-mini" type="button" data-goto="pretrain"><span class="lang-zh">去看这一处</span><span class="lang-en">Open this screen</span></button>
+        </div>
+      </article>
+
+      
+    </div>
+
+    
+  </section>
+</main>
+
+<!-- 提示来源标注：[L3-Coherence] 页脚只保留必要信息，不做装饰性堆砌。 -->
+<footer class="site-footer">
+  <p>
+    <span class="lang-zh">课堂原型 · 向导地小球用插画，行星与图表由代码绘制 · 科学数据来自 NASA 公开资料（取整数，方便小学生理解）</span>
+    <span class="lang-en">Classroom prototype · Earthie is an illustration; the planets and diagrams are drawn in code · Figures from public NASA data, rounded for young learners</span>
+  </p>
+</footer>
+
+<div id="live" class="sr-live" aria-live="polite"></div>
+
+<!-- 学习区的浮动「上一段／下一段」：不用滑到页底也能继续      [L3-Boundary] -->
+<div class="module-dock" id="module-dock" hidden>
+  <button class="dock-btn" type="button" data-module-prev aria-label="上一段 / Previous module">
+    <span class="ico" aria-hidden="true" data-icon="chevronLeft"></span>
+  </button>
+  <span class="dock-now"><b id="dock-now">1</b> / 2</span>
+  <button class="dock-btn dock-next" type="button" data-module-next>
+    <span class="lang-zh">下一段</span><span class="lang-en">Next</span>
+    <span class="ico" aria-hidden="true" data-icon="chevronRight"></span>
+  </button>
+</div>
+
+<!-- 回到顶部：滚过一屏后出现，长模块里随手可回，也能快速回到顶部导航。 -->
+<button id="to-top" class="to-top" type="button" hidden>
+  <span class="ico" aria-hidden="true" data-icon="arrowUp"></span>
+  <span class="lang-zh">回到顶部</span><span class="lang-en">Top</span>
+</button>
+
+<script src="art.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
